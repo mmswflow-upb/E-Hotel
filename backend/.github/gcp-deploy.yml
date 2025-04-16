@@ -1,0 +1,35 @@
+name: Deploy Express Server to Cloud Run
+
+on:
+  push:
+    branches:
+      - main # Adjust as needed
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: "latest"
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Build Docker Image
+        run: |
+          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT }}/express-app .
+        working-directory: ./backend
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy express-app \
+          --image gcr.io/${{ secrets.GCP_PROJECT }}/express-app \
+          --region us-central1 \
+          --platform managed \
+          --allow-unauthenticated
+        working-directory: ./backend
