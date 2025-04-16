@@ -1,16 +1,8 @@
-// frontend/src/firebase.js
+// Correct for Firebase v11 using ES modules:
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { firebaseConfig } from "./firebaseConfig";
+import { firebaseConfig } from "./firebaseConfig"; // your config file
 
-// Make sure firebaseConfig is defined and imported correctly
-if (!firebaseConfig) {
-  console.error("Firebase configuration is missing!");
-}
-
-// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
-
-// Initialize and export Firebase Auth (and any other service you need)
 export const auth = getAuth(app);
 export default app;
