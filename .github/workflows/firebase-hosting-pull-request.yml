@@ -22,3 +22,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_E_HOTEL_SDM }}
           projectId: e-hotel-sdm
+          entryPoint: ./frontend

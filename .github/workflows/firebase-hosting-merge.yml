@@ -21,3 +21,4 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_E_HOTEL_SDM }}
           channelId: live
           projectId: e-hotel-sdm
+          entryPoint: ./frontend
