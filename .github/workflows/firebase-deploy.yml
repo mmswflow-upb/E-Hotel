@@ -20,11 +20,11 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-        working-directory: ./ # assuming frontend/package.json is here
+        working-directory: ./frontend
 
       - name: Build Vite App
         run: npm run build
-        working-directory: ./
+        working-directory: ./frontend
 
       - name: Install Firebase Tools
         run: npm install -g firebase-tools
@@ -33,3 +33,4 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: firebase deploy --only hosting
+        working-directory: ./frontend
