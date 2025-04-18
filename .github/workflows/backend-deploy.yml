@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write # for google-github-actions/auth@v2
 
     steps:
       - name: Checkout code
@@ -23,15 +23,25 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
 
-      - name: Build & Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v2
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          service: e-hotel-backend
-          region: europe-west1
-          source: backend
-          flags: "--allow-unauthenticated"
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Build & Push Docker image
+        run: |
+          gcloud builds submit backend \
+            --tag europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy e-hotel-backend \
+            --image europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }} \
+            --region europe-west1 \
+            --platform managed \
+            --allow-unauthenticated
 
       - name: Show deployed URL
         run: |
-          echo "Backend is live at ${{ steps.deploy.outputs.url }}"
+          echo "Backend is live at $(gcloud run services describe e-hotel-backend \
+            --region=europe-west1 --format='value(status.url)')"
