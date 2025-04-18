@@ -18,7 +18,7 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_E_HOTEL_SDM }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SA_REACTAPP_DEPLOY_KEY }}
           channelId: live
-          projectId: e-hotel-sdm
+          projectId: ${{ secrets.GCP_PROJECT_ID }}
           entryPoint: ./frontend

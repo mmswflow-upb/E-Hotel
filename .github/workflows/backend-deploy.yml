@@ -1,0 +1,40 @@
+name: Deploy Backend to Google Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-deploy.yml"
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Google Auth
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}"
+
+      - name: Set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: Build and Push Backend Container
+        run: |
+          cd backend
+          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
+
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy e-hotel-backend \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }} \
+            --region eu-west1 \
+            --platform managed \
+            --allow-unauthenticated
