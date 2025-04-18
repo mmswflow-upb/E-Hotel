@@ -30,7 +30,7 @@ jobs:
         run: |
           gcloud builds submit backend \
             --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/express-server:${{ github.sha }} \
-            --no-stream
+            --gcs-log-dir=gs://my-build-logs-bucket/
 
       - name: Deploy Backend to Cloud Run
         run: |
