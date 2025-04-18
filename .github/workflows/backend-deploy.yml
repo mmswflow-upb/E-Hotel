@@ -23,13 +23,16 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
 
-      - name: Build container image
-        uses: google-github-actions/build@v0
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          path: backend
-          dockerfile: backend/Dockerfile
-          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
+          service_account_key: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
+
+      - name: Build container image
+        run: |
+          gcloud builds submit backend \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v1
