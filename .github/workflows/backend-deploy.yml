@@ -26,11 +26,12 @@ jobs:
       - name: Set up Cloud SDK
         uses: "google-github-actions/setup-gcloud@v1"
 
-      - name: Build & Submit to Registry
+      - name: Kick off build
         run: |
-          gcloud builds submit backend \
-            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/express-server:${{ github.sha }} \
-            --gcs-log-dir=gs://my-build-logs-bucket/
+          BUILD_ID=$(gcloud builds submit backend \
+            --format="value(id)" \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/express-server:${{ github.sha }})
+          gcloud builds log $BUILD_ID       # <-- this will pull the finished logs
 
       - name: Deploy Backend to Cloud Run
         run: |
