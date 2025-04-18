@@ -1,4 +1,4 @@
-name: Deploy React Appto Firebase Hosting on Merge
+name: Deploy React App to Firebase Hosting on Merge
 on:
   push:
     branches:

@@ -11,32 +11,31 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     permissions:
-      contents: "read"
-      id-token: "write"
+      contents: read
+      id-token: write # needed by google-github-actions/auth@v1
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Google Auth
-        uses: "google-github-actions/auth@v1"
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
         with:
-          credentials_json: "${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}"
+          credentials_json: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: "google-github-actions/setup-gcloud@v1"
+      - name: Build container image
+        uses: google-github-actions/build@v0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          path: backend
+          dockerfile: backend/Dockerfile
+          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
 
-      - name: Kick off build
-        run: |
-          BUILD_ID=$(gcloud builds submit backend \
-            --format="value(id)" \
-            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/express-server:${{ github.sha }})
-          gcloud builds log $BUILD_ID       # <-- this will pull the finished logs
-
-      - name: Deploy Backend to Cloud Run
-        run: |
-          gcloud run deploy e-hotel-backend \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }} \
-            --region eu-west1 \
-            --platform managed \
-            --allow-unauthenticated
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v1
+        with:
+          service: e-hotel-backend
+          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
+          region: eu-west1
+          platform: managed
+          allow_unauthenticated: true
