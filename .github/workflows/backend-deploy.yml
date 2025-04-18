@@ -34,4 +34,4 @@ jobs:
 
       - name: Show deployed URL
         run: |
-          echo "✅ Backend is live at ${{ steps.deploy.outputs.url }}"
+          echo "Backend is live at ${{ steps.deploy.outputs.url }}"
