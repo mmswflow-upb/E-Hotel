@@ -28,7 +28,7 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: e-hotel-backend
-          region: eu-west1
+          region: europe-west1
           source: backend
           flags: "--allow-unauthenticated"
 
