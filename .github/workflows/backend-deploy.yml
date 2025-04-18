@@ -21,11 +21,7 @@ jobs:
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          # either via key JSON:
           credentials_json: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
-          # — or via Workload Identity Federation:
-          # workload_identity_provider: '${{ vars.WIF_PROVIDER }}'
-          # service_account: 'github-deploy@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Build & Deploy to Cloud Run
         id: deploy
@@ -34,7 +30,6 @@ jobs:
           service: e-hotel-backend
           region: eu-west1
           source: backend
-          # <-- drop allow_unauthenticated, use flags instead:
           flags: "--allow-unauthenticated"
 
       - name: Show deployed URL
