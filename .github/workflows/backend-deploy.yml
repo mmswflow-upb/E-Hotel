@@ -26,10 +26,11 @@ jobs:
       - name: Set up Cloud SDK
         uses: "google-github-actions/setup-gcloud@v1"
 
-      - name: Build and Push Backend Container
+      - name: Build & Submit to Registry
         run: |
-          cd backend
-          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
+          gcloud builds submit backend \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/express-server:${{ github.sha }} \
+            --no-stream
 
       - name: Deploy Backend to Cloud Run
         run: |
