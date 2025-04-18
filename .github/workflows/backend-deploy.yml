@@ -12,33 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # needed by google-github-actions/auth@v1
+      id-token: write # needed for google-github-actions/auth@v2
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
+          # either via key JSON:
           credentials_json: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
+          # — or via Workload Identity Federation:
+          # workload_identity_provider: '${{ vars.WIF_PROVIDER }}'
+          # service_account: 'github-deploy@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
 
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_SERVER_DEPLOY_KEY }}
-
-      - name: Build container image
-        run: |
-          gcloud builds submit backend \
-            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
-
-      - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v1
+      - name: Build & Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: e-hotel-backend
-          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/e-hotel-backend:${{ github.sha }}
           region: eu-west1
-          platform: managed
-          allow_unauthenticated: true
+          source: backend
+          # <-- drop allow_unauthenticated, use flags instead:
+          flags: "--allow-unauthenticated"
+
+      - name: Show deployed URL
+        run: |
+          echo "✅ Backend is live at ${{ steps.deploy.outputs.url }}"
