@@ -1,4 +1,4 @@
-name: Build and Deploy to Cloud Run
+name: Build and Deploy ExpressJS Web Server to Cloud Run
 
 on:
   push:
@@ -27,11 +27,12 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ secrets.GCP_LOCATION }}-docker.pkg.dev
 
+      # 🚀 Build and push the image from /backend
       - name: Build and Push Docker image
         run: |
           IMAGE_URI="${{ secrets.GCP_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPOSITORY_NAME }}/my-github-action:latest"
           echo "Building Docker image: $IMAGE_URI"
-          docker build -t "$IMAGE_URI" .
+          docker build -t "$IMAGE_URI" ./backend
           docker push "$IMAGE_URI"
 
       - name: Deploy to Cloud Run
