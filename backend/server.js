@@ -1,41 +1,52 @@
 // backend/server.js
+/* eslint-disable no-console */
 const express = require("express");
 const admin = require("firebase-admin");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-// Initialize Firebase Admin SDK with your service account
-const serviceAccount = require("./serviceAccountKey.json");
+/* ------------------------------------------------------------------ */
+/* 1)  Firebase Admin SDK — use the Application‑Default Credentials   */
+/* ------------------------------------------------------------------ */
+// Cloud Run automatically supplies credentials for the service account
+// you deploy with, so no key file is required. If you deploy with the
+// default project service account that has "Cloud Datastore User" (or
+// Firestore) permissions, the following single call is enough.
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  // Replace <your-project-id> with your actual Firebase project ID.
-  databaseURL: "https://<your-project-id>.firebaseio.com",
+  credential: admin.credential.applicationDefault(),
+  // projectId can be omitted; Admin SDK will infer it from the creds.
+  // projectId: process.env.GOOGLE_CLOUD_PROJECT,
 });
+
 const db = admin.firestore();
 
+/* ------------------------------------------------------------------ */
+/* 2)  Express app & middleware                                        */
+/* ------------------------------------------------------------------ */
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Middleware: Verify Firebase token from the Authorization header
+// ───────────────────────── Authentication ──────────────────────────
 const authenticate = async (req, res, next) => {
-  const header = req.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) {
-    return res.status(403).send("Unauthorized");
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Bearer ")) {
+    return res.status(401).send("Unauthorized");
   }
-  const token = header.split("Bearer ")[1];
+
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
-    if (!req.user.role) req.user.role = "tourist"; // Default role
+    const idToken = header.substring(7); // after "Bearer "
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    req.user = decoded;
+    req.user.role ||= "tourist"; // default role
     next();
-  } catch (error) {
-    console.error("Token verification error:", error);
-    return res.status(403).send("Unauthorized");
+  } catch (err) {
+    console.error("Token verification error:", err);
+    res.status(401).send("Unauthorized");
   }
 };
 
-// Middleware: Role checking middleware
+// ────────────────────────── RBAC helper ────────────────────────────
 const requireRole = (roles) => (req, res, next) => {
   if (!roles.includes(req.user.role)) {
     return res.status(403).send("Forbidden: Insufficient role");
@@ -43,9 +54,11 @@ const requireRole = (roles) => (req, res, next) => {
   next();
 };
 
-// API Endpoints
+/* ------------------------------------------------------------------ */
+/* 3)  API routes                                                      */
+/* ------------------------------------------------------------------ */
 
-// POST /api/reservations – Create a new reservation (tourist only)
+// POST /api/reservations  ─ tourist creates a reservation
 app.post(
   "/api/reservations",
   authenticate,
@@ -56,53 +69,50 @@ app.post(
       if (!roomType || !checkInDate || !checkOutDate) {
         return res.status(400).send("Missing required reservation data");
       }
-      const newReservation = {
+
+      const reservation = {
         touristId: req.user.uid,
         roomType,
         checkInDate: new Date(checkInDate),
         checkOutDate: new Date(checkOutDate),
-        status: "booked", // Possible statuses: booked, cancelled, occupied, completed
+        status: "booked", // booked | cancelled | occupied | completed
         createdAt: new Date(),
       };
-      const docRef = await db.collection("reservations").add(newReservation);
-      res.status(201).send({ reservationId: docRef.id, ...newReservation });
-    } catch (error) {
-      console.error("Error creating reservation:", error);
+
+      const docRef = await db.collection("reservations").add(reservation);
+      res.status(201).send({ reservationId: docRef.id, ...reservation });
+    } catch (err) {
+      console.error("Error creating reservation:", err);
       res.status(500).send("Server error");
     }
   }
 );
 
-// GET /api/reservations – Get reservations (tourists see only their own)
+// GET /api/reservations ─ tourist gets own, staff gets all
 app.get("/api/reservations", authenticate, async (req, res) => {
   try {
-    let query;
-    if (req.user.role === "tourist") {
-      query = db
-        .collection("reservations")
-        .where("touristId", "==", req.user.uid);
-    } else {
-      query = db.collection("reservations");
-    }
-    const snapshot = await query.get();
-    const reservations = [];
-    snapshot.forEach((doc) => reservations.push({ id: doc.id, ...doc.data() }));
-    res.send(reservations);
-  } catch (error) {
-    console.error("Error retrieving reservations:", error);
+    const query =
+      req.user.role === "tourist"
+        ? db.collection("reservations").where("touristId", "==", req.user.uid)
+        : db.collection("reservations");
+
+    const snap = await query.get();
+    const out = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    res.send(out);
+  } catch (err) {
+    console.error("Error retrieving reservations:", err);
     res.status(500).send("Server error");
   }
 });
 
-// PUT /api/reservations/:id/cancel – Cancel a reservation (tourist or receptionist)
+// PUT /api/reservations/:id/cancel ─ tourist or receptionist
 app.put("/api/reservations/:id/cancel", authenticate, async (req, res) => {
   try {
-    const reservationId = req.params.id;
-    const reservationRef = db.collection("reservations").doc(reservationId);
+    const id = req.params.id;
+    const reservationRef = db.collection("reservations").doc(id);
     const doc = await reservationRef.get();
-    if (!doc.exists) {
-      return res.status(404).send("Reservation not found");
-    }
+    if (!doc.exists) return res.status(404).send("Reservation not found");
+
     const reservation = doc.data();
     if (
       req.user.uid !== reservation.touristId &&
@@ -111,14 +121,14 @@ app.put("/api/reservations/:id/cancel", authenticate, async (req, res) => {
       return res.status(403).send("Forbidden: Cannot cancel this reservation");
     }
     await reservationRef.update({ status: "cancelled" });
-    res.send({ id: reservationId, status: "cancelled" });
-  } catch (error) {
-    console.error("Error cancelling reservation:", error);
+    res.send({ id, status: "cancelled" });
+  } catch (err) {
+    console.error("Error cancelling reservation:", err);
     res.status(500).send("Server error");
   }
 });
 
-// POST /api/checkin – Check in a reservation (receptionist only)
+// POST /api/checkin ─ receptionist only
 app.post(
   "/api/checkin",
   authenticate,
@@ -126,31 +136,27 @@ app.post(
   async (req, res) => {
     try {
       const { reservationId } = req.body;
-      if (!reservationId) {
-        return res.status(400).send("Missing reservationId");
-      }
-      const reservationRef = db.collection("reservations").doc(reservationId);
-      const doc = await reservationRef.get();
-      if (!doc.exists) {
-        return res.status(404).send("Reservation not found");
-      }
-      const reservation = doc.data();
-      if (reservation.status !== "booked") {
+      if (!reservationId) return res.status(400).send("Missing reservationId");
+
+      const ref = db.collection("reservations").doc(reservationId);
+      const snap = await ref.get();
+      if (!snap.exists) return res.status(404).send("Reservation not found");
+
+      const data = snap.data();
+      if (data.status !== "booked") {
         return res.status(400).send("Reservation cannot be checked in");
       }
-      await reservationRef.update({
-        status: "occupied",
-        checkInTime: new Date(),
-      });
+
+      await ref.update({ status: "occupied", checkInTime: new Date() });
       res.send({ id: reservationId, status: "occupied" });
-    } catch (error) {
-      console.error("Error during check-in:", error);
+    } catch (err) {
+      console.error("Error during check‑in:", err);
       res.status(500).send("Server error");
     }
   }
 );
 
-// POST /api/checkout – Check out a reservation (receptionist only)
+// POST /api/checkout ─ receptionist only
 app.post(
   "/api/checkout",
   authenticate,
@@ -158,76 +164,78 @@ app.post(
   async (req, res) => {
     try {
       const { reservationId } = req.body;
-      if (!reservationId) {
-        return res.status(400).send("Missing reservationId");
-      }
-      const reservationRef = db.collection("reservations").doc(reservationId);
-      const doc = await reservationRef.get();
-      if (!doc.exists) {
-        return res.status(404).send("Reservation not found");
-      }
-      const reservation = doc.data();
-      if (reservation.status !== "occupied") {
+      if (!reservationId) return res.status(400).send("Missing reservationId");
+
+      const ref = db.collection("reservations").doc(reservationId);
+      const snap = await ref.get();
+      if (!snap.exists) return res.status(404).send("Reservation not found");
+
+      const data = snap.data();
+      if (data.status !== "occupied") {
         return res.status(400).send("Reservation cannot be checked out");
       }
-      await reservationRef.update({
-        status: "completed",
-        checkOutTime: new Date(),
-      });
+
+      await ref.update({ status: "completed", checkOutTime: new Date() });
       res.send({ id: reservationId, status: "completed" });
-    } catch (error) {
-      console.error("Error during check-out:", error);
+    } catch (err) {
+      console.error("Error during check‑out:", err);
       res.status(500).send("Server error");
     }
   }
 );
 
-// GET /api/stats – Generate monthly statistics (hotel_manager only)
+// GET /api/stats ─ hotel_manager only
 app.get(
   "/api/stats",
   authenticate,
   requireRole(["hotel_manager"]),
-  async (req, res) => {
+  async (_req, res) => {
     try {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const snapshot = await db
+
+      const snap = await db
         .collection("reservations")
         .where("createdAt", ">=", startOfMonth)
         .where("createdAt", "<=", endOfMonth)
         .get();
+
       let total = 0,
         cancelled = 0,
         completed = 0,
         booked = 0;
-      snapshot.forEach((doc) => {
+      snap.forEach((doc) => {
         total++;
-        const data = doc.data();
-        if (data.status === "cancelled") cancelled++;
-        if (data.status === "completed") completed++;
-        if (data.status === "booked") booked++;
+        const s = doc.data().status;
+        if (s === "cancelled") cancelled++;
+        if (s === "completed") completed++;
+        if (s === "booked") booked++;
       });
+
       res.send({
         totalReservations: total,
         cancelled,
         completed,
         booked,
-        occupancyRate: total > 0 ? (completed / total) * 100 : 0,
+        occupancyRate: total ? (completed / total) * 100 : 0,
       });
-    } catch (error) {
-      console.error("Error generating statistics:", error);
+    } catch (err) {
+      console.error("Error generating statistics:", err);
       res.status(500).send("Server error");
     }
   }
 );
 
-// Health check route sometime required by Cloud Run
-app.get("/health", (req, res) => {
-  res.status(200).send("Healthy");
-});
+/* ------------------------------------------------------------------ */
+/* 4)  Health check route — useful for Cloud Run startup probes        */
+/* ------------------------------------------------------------------ */
+app.get("/health", (_req, res) => res.status(200).send("Healthy"));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Express server listening on port ${PORT}`);
-});
+/* ------------------------------------------------------------------ */
+/* 5)  Start the HTTP server                                           */
+/* ------------------------------------------------------------------ */
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () =>
+  console.log(`Express server listening on port ${PORT}`)
+);
