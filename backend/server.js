@@ -222,6 +222,11 @@ app.get(
   }
 );
 
+// Health check route sometime required by Cloud Run
+app.get("/health", (req, res) => {
+  res.status(200).send("Healthy");
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Express server listening on port ${PORT}`);
