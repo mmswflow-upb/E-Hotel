@@ -13,7 +13,7 @@ module.exports = async (req, res, next) => {
     const decoded = await admin.auth().verifyIdToken(idToken);
     req.user = {
       uid: decoded.uid,
-      role: decoded.role || "Tourist",
+      role: decoded.role || "Customer",
       assignedHotelIds: decoded.assignedHotelIds || [],
       managedHotelIds: decoded.managedHotelIds || [],
     };

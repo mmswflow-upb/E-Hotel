@@ -7,8 +7,6 @@ const role = require("../middleware/role");
 router.use(auth);
 
 // Individual routes with role checks
-router.get("/me", role("HotelManager", "SystemAdmin"), ctl.getMe);
-router.put("/me", role("HotelManager", "SystemAdmin"), ctl.upsertMe);
 router.get(
   "/:hotelId/stats/monthly",
   role("HotelManager", "SystemAdmin"),

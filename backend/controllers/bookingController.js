@@ -27,21 +27,16 @@ exports.listMine = async (req, res) => {
 };
 
 exports.listAllMine = async (req, res) => {
-  try {
-    const list = await bookingSvc.listAllUserBookings(req.user.uid);
-    res.json(list);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
+  const bookings = await bookingSvc.listBookings({ customerID: req.user.uid });
+  res.json(bookings);
 };
 
 exports.listAll = async (req, res) => {
-  try {
-    const all = await bookingSvc.listHotelBookings(req.params.hotelId);
-    res.json(all);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
-  }
+  const bookings = await bookingSvc.listBookings({
+    hotelId: req.query.hotelId,
+    staffId: req.user.id,
+  });
+  res.json(bookings);
 };
 
 exports.cancel = async (req, res) => {
@@ -58,15 +53,61 @@ exports.cancel = async (req, res) => {
 };
 
 exports.getById = async (req, res) => {
+  const booking = await bookingSvc.getBookingById(req.params.bookingId, {
+    staffId: req.user.id,
+  });
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
+  res.json(booking);
+};
+
+exports.getByIdMine = async (req, res) => {
+  const booking = await bookingSvc.getBookingById(req.params.bookingId, {
+    customerId: req.user.id,
+  });
+  if (!booking) return res.status(404).json({ message: "Booking not found" });
+  res.json(booking);
+};
+
+exports.createCustomer = async (req, res) => {
   try {
-    const booking = await bookingSvc.getBookingById({
-      bookingID: req.params.bookingId,
-      userId: req.user.uid,
-      userRole: req.user.role,
+    const booking = await bookingSvc.createBooking({
+      ...req.body,
+      customerId: req.user.id,
     });
-    if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
+    res.status(201).json(booking);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
+exports.cancelCustomer = async (req, res) => {
+  try {
+    const booking = await bookingSvc.cancelBooking(req.params.bookingId, {
+      customerId: req.user.id,
+    });
+    res.json(booking);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
+exports.createReceptionist = async (req, res) => {
+  try {
+    const booking = await bookingSvc.createBooking({
+      ...req.body,
+      createdBy: req.user.id,
+    });
+    res.status(201).json(booking);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
+exports.cancelReceptionist = async (req, res) => {
+  try {
+    const booking = await bookingSvc.cancelBooking(req.params.bookingId, {
+      staffId: req.user.id,
+    });
     res.json(booking);
   } catch (e) {
     res.status(400).json({ error: e.message });

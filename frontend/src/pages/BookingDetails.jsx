@@ -14,10 +14,12 @@ export default function BookingDetail() {
       try {
         const res = await api.get(`/bookings/${bookingId}`);
         setBooking(res.data);
-        try {
-          const iv = await api.get(`/bookings/${bookingId}/invoice`);
-          setInvoice(iv.data);
-        } catch {}
+        if (res.data.hasInvoice) {
+          try {
+            const iv = await api.get(`/bookings/${bookingId}/invoice`);
+            setInvoice(iv.data);
+          } catch {}
+        }
       } catch (e) {
         setErr(e.message);
       }

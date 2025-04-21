@@ -27,8 +27,8 @@ export function AuthProvider({ children }) {
           const claims = tokenResult.claims;
           console.log("Claims:", claims);
           setUser(u);
-          setRole(claims.role || "Tourist");
-          console.log("Set role to:", claims.role || "Tourist");
+          setRole(claims.role || "Customer");
+          console.log("Set role to:", claims.role || "Customer");
         } catch (error) {
           console.error("Error getting token result:", error);
         }

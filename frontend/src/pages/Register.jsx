@@ -7,16 +7,18 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
+
   async function submit(e) {
     e.preventDefault();
     setErr("");
     try {
       await createUserWithEmailAndPassword(auth, email, pw);
-      await api.put("/customers/me", { name: email.split("@")[0] });
+      await api.put("/accounts/me", { name: email.split("@")[0] });
     } catch (e) {
       setErr(e.message);
     }
   }
+
   return (
     <div className="center">
       <h2>Register</h2>

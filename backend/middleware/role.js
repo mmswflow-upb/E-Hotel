@@ -15,10 +15,7 @@ module.exports =
     const { role, assignedHotelIds, managedHotelIds } = req.user;
 
     // Check if user's role is allowed
-    if (
-      !allowedRoles.includes(role) &&
-      !(role === "Customer" && allowedRoles.includes("Tourist"))
-    ) {
+    if (!allowedRoles.includes(role)) {
       return res.status(403).json({ error: "Forbidden – insufficient role" });
     }
 
@@ -35,12 +32,8 @@ module.exports =
         return next();
       }
 
-      // Receptionist, Customer and Tourist can view all hotels
-      if (
-        role === "Receptionist" ||
-        role === "Customer" ||
-        role === "Tourist"
-      ) {
+      // Receptionist and Customer can view all hotels
+      if (role === "Receptionist" || role === "Customer") {
         return next();
       }
 

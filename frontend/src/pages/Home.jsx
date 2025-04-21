@@ -21,12 +21,12 @@ export default function Home() {
 
       {user && (
         <>
-          <p>Welcome back{role ? `, ${role}` : ""}!</p>
+          <p>Welcome back, {user.displayName || user.email?.split("@")[0]}!</p>
           <ul className="card-list">
             <li className="card">
               <Link to="/hotels">Browse hotels</Link>
             </li>
-            {["Tourist", "Customer"].includes(role) && (
+            {role === "Customer" && (
               <li className="card">
                 <Link to="/my-bookings">My bookings</Link>
               </li>

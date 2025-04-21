@@ -16,10 +16,8 @@ export default function NavBar() {
       <Link to="/hotels">Hotels</Link>
       {user ? (
         <>
-          <Link to="/profile">Profile</Link>
-          {["Tourist", "Customer"].includes(role) && (
-            <Link to="/my-bookings">My bookings</Link>
-          )}
+          {role === "Customer" && <Link to="/profile">Profile</Link>}
+          {role === "Customer" && <Link to="/my-bookings">My bookings</Link>}
           {["Receptionist", "SystemAdmin"].includes(role) && (
             <Link to="/reception">Reception</Link>
           )}

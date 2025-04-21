@@ -99,10 +99,9 @@ async function seed() {
       .collection("hotelManagers")
       .doc(u.uid)
       .set({
-        uid: u.uid,
-        name: u.displayName || `Manager ${i + 1}`,
-        hotelIDs: [],
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        name: `Manager ${i + 1}`,
+        email: u.email,
+        hotelID: null, // assigned below
       });
   }
 
@@ -114,25 +113,25 @@ async function seed() {
       .collection("receptionists")
       .doc(u.uid)
       .set({
-        uid: u.uid,
-        name: u.displayName || `Receptionist ${i + 1}`,
-        hotelID: null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        name: `Receptionist ${i + 1}`,
+        email: u.email,
+        hotelID: null, // assigned below
       });
   }
 
   console.log("✨ Customers");
   for (let i = 0; i < customers.length; i++) {
     const u = customers[i];
-    await ensureRole(u.uid, "Tourist");
+    await ensureRole(u.uid, "Customer");
     await db
       .collection("customers")
       .doc(u.uid)
       .set({
-        name: u.displayName || `User${i + 1}`,
-        contactInfo: u.email,
-        identification: `ID-${1000 + i}`,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        name: `Customer ${i + 1}`,
+        email: u.email,
+        contactInfo: `contact${i + 1}@example.com`,
+        identification: `ID${i + 1}`,
+        balance: Number(Math.floor(rand() * 1000)), // Ensure balance is stored as a number
       });
   }
 

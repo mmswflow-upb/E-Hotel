@@ -9,7 +9,7 @@ export default function MyBookings() {
   useEffect(() => {
     (async () => {
       try {
-        const bookings = (await api.get("/bookings/mine")).data;
+        const bookings = (await api.get("/bookings")).data;
         setRows(bookings);
       } catch (e) {
         setErr(e.response?.data?.error || e.message);

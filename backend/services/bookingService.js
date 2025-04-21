@@ -79,8 +79,8 @@ exports.listUserBookings = async (hotelId, customerID) => {
   });
 };
 
-exports.listAllUserBookings = async (customerID) => {
-  const snap = await bookingsCol.where("customerID", "==", customerID).get();
+exports.listAllUserBookings = async (uid) => {
+  const snap = await bookingsCol.where("customerID", "==", uid).get();
   const bookings = await Promise.all(
     snap.docs.map(async (d) => {
       const data = d.data();
@@ -124,7 +124,7 @@ exports.listAllUserBookings = async (customerID) => {
           address: hotelData.address,
           starRating: hotelData.starRating,
         },
-        customerID,
+        customerID: uid,
         roomDetails,
         checkInDate: data.checkInDate.toDate(),
         checkOutDate: data.checkOutDate.toDate(),
@@ -271,20 +271,88 @@ exports.checkOutBooking = async ({ hotelId, bookingID }) => {
   return { payment, invoice };
 };
 
-exports.getBookingById = async ({ bookingID, userId, userRole }) => {
-  const doc = await bookingsCol.doc(bookingID).get();
+exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
+  let query = bookingsCol;
+
+  if (customerID) {
+    query = query.where("customerID", "==", customerID);
+  } else if (hotelId) {
+    query = query.where("hotelID", "==", hotelId);
+  } else if (staffId) {
+    // For staff, get bookings for hotels they manage/work at
+    const staffDoc = await db.collection("staff").doc(staffId).get();
+    const staffData = staffDoc.data();
+    if (staffData.hotelId) {
+      query = query.where("hotelID", "==", staffData.hotelId);
+    }
+  }
+
+  const snap = await query.get();
+  const bookings = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data();
+
+      // Get hotel details
+      const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
+      const hotelData = hotelDoc.data();
+
+      // Get room details
+      const roomPromises = data.roomDetails.map((roomId) =>
+        db.collection("rooms").doc(roomId).get()
+      );
+      const roomDocs = await Promise.all(roomPromises);
+      const roomDetails = roomDocs.map((roomDoc) => ({
+        roomNumber: roomDoc.data().roomNumber,
+        type: roomDoc.data().type,
+        status: roomDoc.data().status,
+      }));
+
+      // Get payment status
+      const paymentSnap = await db
+        .collection("paymentTransactions")
+        .where("bookingID", "==", d.id)
+        .get();
+      const paymentStatus = paymentSnap.empty
+        ? "pending"
+        : paymentSnap.docs[0].data().status;
+
+      // Get invoice status
+      const invoiceSnap = await db
+        .collection("invoices")
+        .where("bookingID", "==", d.id)
+        .get();
+      const hasInvoice = !invoiceSnap.empty;
+
+      return new Booking({
+        bookingID: d.id,
+        hotelID: data.hotelID,
+        hotelDetails: {
+          name: hotelData.name,
+          address: hotelData.address,
+          starRating: hotelData.starRating,
+        },
+        customerID: data.customerID,
+        roomDetails,
+        checkInDate: data.checkInDate.toDate(),
+        checkOutDate: data.checkOutDate.toDate(),
+        checkedOutAt: data.checkedOutAt?.toDate(),
+        cancellationGracePeriod: data.cancellationGracePeriod,
+        totalAmount: data.totalAmount,
+        status: data.status,
+        paymentStatus,
+        hasInvoice,
+        createdAt: data.createdAt.toDate(),
+      });
+    })
+  );
+  return bookings;
+};
+
+exports.getBookingById = async (bookingId, { customerId, staffId } = {}) => {
+  const doc = await bookingsCol.doc(bookingId).get();
   if (!doc.exists) return null;
 
   const data = doc.data();
-
-  // Check if the user has permission to view this booking
-  if (
-    userRole !== "HotelManager" &&
-    userRole !== "Receptionist" &&
-    data.customerID !== userId
-  ) {
-    return null;
-  }
 
   // Get hotel details
   const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
@@ -304,7 +372,7 @@ exports.getBookingById = async ({ bookingID, userId, userRole }) => {
   // Get payment status
   const paymentSnap = await db
     .collection("paymentTransactions")
-    .where("bookingID", "==", bookingID)
+    .where("bookingID", "==", doc.id)
     .get();
   const paymentStatus = paymentSnap.empty
     ? "pending"
@@ -313,12 +381,20 @@ exports.getBookingById = async ({ bookingID, userId, userRole }) => {
   // Get invoice status
   const invoiceSnap = await db
     .collection("invoices")
-    .where("bookingID", "==", bookingID)
+    .where("bookingID", "==", doc.id)
     .get();
   const hasInvoice = !invoiceSnap.empty;
 
+  // Check access permissions
+  if (customerId && data.customerID !== customerId) return null;
+  if (staffId) {
+    const staffDoc = await db.collection("staff").doc(staffId).get();
+    const staffData = staffDoc.data();
+    if (staffData.hotelId && data.hotelID !== staffData.hotelId) return null;
+  }
+
   return new Booking({
-    bookingID,
+    bookingID: doc.id,
     hotelID: data.hotelID,
     hotelDetails: {
       name: hotelData.name,

@@ -2,26 +2,78 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
-const bkgCtrl = require("../controllers/bookingController");
+const bookingCtrl = require("../controllers/bookingController");
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
+
+// Apply auth middleware to all routes
 router.use(auth);
 
-// Top-level routes (no hotelId required)
-router.get("/mine", role("Tourist", "Customer"), bkgCtrl.listAllMine);
+// Unified booking routes that handle role-based access
+router.get(
+  "/",
+  role("Customer", "Receptionist", "HotelManager", "SystemAdmin"),
+  (req, res, next) => {
+    const userRole = req.user.role;
 
-// Hotel-specific routes (requires hotelId)
-router.post("/", role("Tourist", "Customer", "Receptionist"), bkgCtrl.create);
-router.get("/", role("Receptionist", "HotelManager"), bkgCtrl.listAll);
+    switch (userRole) {
+      case "Customer":
+        return bookingCtrl.listAllMine(req, res, next);
+      case "Receptionist":
+      case "HotelManager":
+        return bookingCtrl.listAll(req, res, next);
+      default:
+        return res.status(403).json({ message: "Unauthorized role" });
+    }
+  }
+);
+
 router.get(
   "/:bookingId",
-  role("Tourist", "Customer", "Receptionist", "HotelManager"),
-  bkgCtrl.getById
+  role("Customer", "Receptionist", "HotelManager", "SystemAdmin"),
+  (req, res, next) => {
+    const userRole = req.user.role;
+
+    switch (userRole) {
+      case "Customer":
+        return bookingCtrl.getByIdMine(req, res, next);
+      case "Receptionist":
+      case "HotelManager":
+        return bookingCtrl.getById(req, res, next);
+      default:
+        return res.status(403).json({ message: "Unauthorized role" });
+    }
+  }
 );
+
+router.post("/", role("Customer", "Receptionist"), (req, res, next) => {
+  const userRole = req.user.role;
+
+  switch (userRole) {
+    case "Customer":
+      return bookingCtrl.createCustomer(req, res, next);
+    case "Receptionist":
+      return bookingCtrl.createReceptionist(req, res, next);
+    default:
+      return res.status(403).json({ message: "Unauthorized role" });
+  }
+});
+
 router.post(
   "/:bookingId/cancel",
-  role("Tourist", "Customer", "Receptionist"),
-  bkgCtrl.cancel
+  role("Customer", "Receptionist"),
+  (req, res, next) => {
+    const userRole = req.user.role;
+
+    switch (userRole) {
+      case "Customer":
+        return bookingCtrl.cancelCustomer(req, res, next);
+      case "Receptionist":
+        return bookingCtrl.cancelReceptionist(req, res, next);
+      default:
+        return res.status(403).json({ message: "Unauthorized role" });
+    }
+  }
 );
 
 module.exports = router;

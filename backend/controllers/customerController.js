@@ -12,11 +12,12 @@ exports.getMe = async (req, res) => {
 
 exports.updateMe = async (req, res) => {
   try {
-    const { name, contactInfo, identification } = req.body;
+    const { name, contactInfo, identification, balance } = req.body;
     const updated = await customerSvc.createOrUpdateCustomer(req.user.uid, {
       name,
       contactInfo,
       identification,
+      balance,
     });
     res.json(updated);
   } catch (e) {

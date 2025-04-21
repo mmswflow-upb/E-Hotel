@@ -16,6 +16,7 @@ exports.getCustomer = async (customerID) => {
     name: d.name,
     contactInfo: d.contactInfo,
     identification: d.identification,
+    balance: Number(d.balance) || 0,
   });
 };
 
@@ -24,16 +25,23 @@ exports.getCustomer = async (customerID) => {
  */
 exports.createOrUpdateCustomer = async (
   customerID,
-  { name, contactInfo, identification }
+  { name, contactInfo, identification, balance }
 ) => {
   const payload = {
     name,
     contactInfo,
     identification,
+    balance: Number(balance) || 0,
     updatedAt: admin.firestore.Timestamp.now(),
   };
   await customersCol.doc(customerID).set(payload, { merge: true });
-  return new Customer({ customerID, name, contactInfo, identification });
+  return new Customer({
+    customerID,
+    name,
+    contactInfo,
+    identification,
+    balance,
+  });
 };
 
 /**
@@ -48,6 +56,7 @@ exports.listCustomers = async () => {
       name: d.name,
       contactInfo: d.contactInfo,
       identification: d.identification,
+      balance: Number(d.balance) || 0,
     });
   });
 };
