@@ -220,7 +220,11 @@ export default function Profile() {
             )}
             {err && (
               <div className="flex items-center justify-center gap-2">
-                <img src={deniedIcon} alt="Error" className="h-5 w-5" />
+                <img
+                  src={deniedIcon}
+                  alt="Error"
+                  className="h-5 w-5 filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
+                />
                 <p className="text-red-500">{err}</p>
               </div>
             )}

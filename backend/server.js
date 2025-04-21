@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const api = require("./routes");
+const { seed } = require("./dataLoader");
 require("./firebase");
 
 const app = express();
@@ -26,7 +27,20 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
+// Check if --seed argument is provided
+const shouldSeed = process.argv.includes("--seed");
+
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Listening on port ${PORT}`);
+
+  if (shouldSeed) {
+    console.log("🌱 Seeding database...");
+    try {
+      await seed();
+      console.log("✅ Database seeded successfully");
+    } catch (error) {
+      console.error("❌ Error seeding database:", error);
+    }
+  }
 });

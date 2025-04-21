@@ -117,7 +117,7 @@ export default function MyBookings() {
               className={`h-5 w-5 ${
                 booking.paymentStatus === "approved"
                   ? ""
-                  : "dark:invert dark:brightness-0 dark:opacity-80"
+                  : "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
               }`}
             />
             <span

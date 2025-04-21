@@ -247,26 +247,18 @@ async function seed() {
       const roomID = roomIDs[hotelID][b];
       const ci = new Date(now.getTime() + (i * 5 + b) * 864e5);
       const co = new Date(ci.getTime() + 2 * 864e5);
-      const amt = 150 + (b % 3) * 50;
 
-      const bookingID = await add("bookings", {
-        hotelID,
-        customerID: cust.uid,
-        roomDetails: [roomID],
-        checkInDate: admin.firestore.Timestamp.fromDate(ci),
-        checkOutDate: admin.firestore.Timestamp.fromDate(co),
-        totalAmount: amt,
-        status: "booked",
-        createdAt: admin.firestore.Timestamp.fromDate(ci),
-        cancellationGracePeriod: 24,
-      });
-      bookings.push({ bookingID, hotelID, cust: cust.uid, amount: amt });
+      // Get room details for proper pricing
+      const room = await db.collection("rooms").doc(roomID).get();
+      const roomData = room.data();
+      const nights = Math.ceil((co - ci) / (1000 * 60 * 60 * 24));
+      const roomTotal = roomData.pricePerNight * nights;
 
       // Create service requests for the booking
       const hotel = await db.collection("hotels").doc(hotelID).get();
       const availableServices = hotel.data().availableServiceIDs;
 
-      // Randomly select some services for this booking
+      // More realistic service selection based on room type and stay duration
       const selectedServices = availableServices
         .sort(() => 0.5 - rand())
         .slice(0, Math.floor(rand() * 3) + 1); // 1-3 services per booking
@@ -276,59 +268,110 @@ async function seed() {
         const service = await db.collection("services").doc(serviceID).get();
         const serviceData = service.data();
 
-        await add("serviceRequests", {
-          hotelID,
-          bookingID,
-          serviceID,
-          roomID,
-          quantity: serviceData.isOneTime ? 1 : Math.floor(rand() * 3) + 1,
-          totalCost: serviceData.isOneTime
-            ? serviceData.cost
-            : serviceData.cost * (Math.floor(rand() * 3) + 1),
-          status: "requested",
-        });
+        // More realistic service quantities based on stay duration
+        let quantity = 1;
+        if (!serviceData.isOneTime) {
+          // For daily services, use number of nights
+          quantity = nights;
+        }
+
+        const totalCost = serviceData.cost * quantity;
 
         serviceCharges.push({
           serviceID,
           name: serviceData.name,
           cost: serviceData.cost,
-          quantity: serviceData.isOneTime ? 1 : Math.floor(rand() * 3) + 1,
-          total: serviceData.isOneTime
-            ? serviceData.cost
-            : serviceData.cost * (Math.floor(rand() * 3) + 1),
+          quantity,
+          total: totalCost,
+          unit: serviceData.isOneTime ? "one-time" : "per night",
         });
       }
 
-      // Create invoice with room and service charges
+      // Calculate total service cost
       const totalServiceCost = serviceCharges.reduce(
         (sum, charge) => sum + charge.total,
         0
       );
-      await add("invoices", {
+
+      // Create booking first
+      const bookingID = await add("bookings", {
+        hotelID,
+        customerID: cust.uid,
+        roomDetails: [roomID],
+        checkInDate: admin.firestore.Timestamp.fromDate(ci),
+        checkOutDate: admin.firestore.Timestamp.fromDate(co),
+        totalAmount: roomTotal + totalServiceCost,
+        status: "booked",
+        createdAt: admin.firestore.Timestamp.fromDate(ci),
+        cancellationGracePeriod: 24,
+      });
+      bookings.push({
+        bookingID,
+        hotelID,
+        cust: cust.uid,
+        amount: roomTotal + totalServiceCost,
+      });
+
+      // Create service requests after booking is created
+      for (const serviceID of selectedServices) {
+        const service = await db.collection("services").doc(serviceID).get();
+        const serviceData = service.data();
+        let quantity = 1;
+        if (!serviceData.isOneTime) {
+          quantity = nights;
+        }
+        const totalCost = serviceData.cost * quantity;
+
+        await add("serviceRequests", {
+          hotelID,
+          bookingID,
+          serviceID,
+          roomID,
+          quantity,
+          totalCost,
+          status: "requested",
+          requestedAt: admin.firestore.Timestamp.fromDate(ci),
+          completedAt: admin.firestore.Timestamp.fromDate(co),
+        });
+      }
+
+      // Determine invoice status based on payment
+      const isPaid = rand() < 0.8; // 80% chance of being paid
+      const invoiceStatus = isPaid ? "Paid" : "Pending";
+
+      const invoiceID = await add("invoices", {
         hotelID,
         bookingID,
         roomCharges: [
           {
             roomID,
-            pricePerNight: amt,
-            nights: 2,
-            total: amt * 2,
+            roomNumber: roomData.roomNumber,
+            roomType: roomData.type,
+            pricePerNight: roomData.pricePerNight,
+            nights,
+            total: roomTotal,
           },
         ],
         serviceCharges,
-        totalAmount: amt * 2 + totalServiceCost,
-        issueDate: admin.firestore.Timestamp.fromDate(co),
-        status: "pending",
+        totalAmount: roomTotal + totalServiceCost,
+        issueDate: admin.firestore.Timestamp.fromDate(ci),
+        dueDate: admin.firestore.Timestamp.fromDate(co),
+        status: invoiceStatus,
+        paymentMethod: "card",
       });
 
-      await add("paymentTransactions", {
-        hotelID,
-        bookingID,
-        amount: amt,
-        paymentMethod: "card",
-        transactionDate: admin.firestore.Timestamp.fromDate(ci),
-        status: "approved",
-      });
+      // Create payment transaction if invoice is paid
+      if (isPaid) {
+        await add("paymentTransactions", {
+          hotelID,
+          bookingID,
+          invoiceID,
+          amount: roomTotal + totalServiceCost,
+          paymentMethod: "card",
+          transactionDate: admin.firestore.Timestamp.fromDate(ci),
+          status: "approved",
+        });
+      }
     }
   }
 
