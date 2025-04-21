@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
+import hotelIcon from "../assets/hotel.png";
 
 export default function Hotels() {
   const [hotels, setHotels] = useState([]);
@@ -20,27 +21,58 @@ export default function Hotels() {
       });
   }, []);
 
-  if (loading) return <p className="center">Loading hotels...</p>;
-  if (err) return <p className="err">{err}</p>;
+  if (loading)
+    return (
+      <p className="text-center text-gray-600 dark:text-gray-300">
+        Loading hotels...
+      </p>
+    );
+  if (err) return <p className="text-red-500 text-center">{err}</p>;
 
   return (
-    <div className="center">
-      <h2>Hotels</h2>
-      {hotels.length === 0 ? (
-        <p>No hotels found</p>
-      ) : (
-        <ul className="card-list">
-          {hotels.map((h) => (
-            <li key={h.hotelID} className="card">
-              <h3>{h.name}</h3>
-              <p>
-                {h.starRating}★ — {h.address}
-              </p>
-              <Link to={`/hotels/${h.hotelID}`}>View Rooms</Link>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center space-x-2">
+            <img
+              src={hotelIcon}
+              alt="Hotels"
+              className="h-8 w-8 dark:invert dark:brightness-0 dark:opacity-80"
+            />
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+              Hotels
+            </h2>
+          </div>
+        </div>
+
+        {hotels.length === 0 ? (
+          <p className="text-center text-gray-600 dark:text-gray-300">
+            No hotels found
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {hotels.map((h) => (
+              <div
+                key={h.hotelID}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200"
+              >
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  {h.name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  {h.starRating}★ — {h.address}
+                </p>
+                <Link
+                  to={`/hotels/${h.hotelID}`}
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  View Rooms
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
