@@ -7,16 +7,15 @@ const bkgCtrl = require("../controllers/bookingController");
 const router = express.Router({ mergeParams: true });
 router.use(auth);
 
-// make a booking
-router.post("/", role("Tourist", "Receptionist"), bkgCtrl.create);
-// view own bookings
-router.get("/mine", role("Tourist"), bkgCtrl.listMine);
-// staff view all
+// Top-level routes (no hotelId required)
+router.get("/mine", role("Tourist", "Customer"), bkgCtrl.listAllMine);
+
+// Hotel-specific routes (requires hotelId)
+router.post("/", role("Tourist", "Customer", "Receptionist"), bkgCtrl.create);
 router.get("/", role("Receptionist", "HotelManager"), bkgCtrl.listAll);
-// cancel
 router.post(
   "/:bookingId/cancel",
-  role("Tourist", "Receptionist"),
+  role("Tourist", "Customer", "Receptionist"),
   bkgCtrl.cancel
 );
 

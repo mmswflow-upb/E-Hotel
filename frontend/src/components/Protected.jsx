@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Protected({
-  roles = ["Tourist", "Receptionist", "HotelManager", "SystemAdmin"],
+  roles = ["Customer", "Receptionist", "HotelManager", "SystemAdmin"],
   children,
 }) {
   const { user, role, loading } = useAuth();

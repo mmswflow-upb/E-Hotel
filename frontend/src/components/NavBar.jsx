@@ -13,11 +13,11 @@ export default function NavBar() {
 
   return (
     <nav className="nav">
-      <Link to="/">Hotels</Link>
+      <Link to="/hotels">Hotels</Link>
       {user ? (
         <>
           <Link to="/profile">Profile</Link>
-          <Link to="/my-bookings">My bookings</Link>
+          <Link to="/my-bookings">My bookings</Link>
           {["Receptionist", "HotelManager", "SystemAdmin"].includes(role) && (
             <Link to="/reception">Reception</Link>
           )}

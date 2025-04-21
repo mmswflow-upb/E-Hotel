@@ -79,6 +79,68 @@ exports.listUserBookings = async (hotelId, customerID) => {
   });
 };
 
+exports.listAllUserBookings = async (customerID) => {
+  const snap = await bookingsCol.where("customerID", "==", customerID).get();
+  const bookings = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data();
+
+      // Get hotel details
+      const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
+      const hotelData = hotelDoc.data();
+
+      // Get room details
+      const roomPromises = data.roomDetails.map((roomId) =>
+        db.collection("rooms").doc(roomId).get()
+      );
+      const roomDocs = await Promise.all(roomPromises);
+      const roomDetails = roomDocs.map((roomDoc) => ({
+        roomNumber: roomDoc.data().roomNumber,
+        type: roomDoc.data().type,
+        status: roomDoc.data().status,
+      }));
+
+      // Get payment status
+      const paymentSnap = await db
+        .collection("paymentTransactions")
+        .where("bookingID", "==", d.id)
+        .get();
+      const paymentStatus = paymentSnap.empty
+        ? "pending"
+        : paymentSnap.docs[0].data().status;
+
+      // Get invoice status
+      const invoiceSnap = await db
+        .collection("invoices")
+        .where("bookingID", "==", d.id)
+        .get();
+      const hasInvoice = !invoiceSnap.empty;
+
+      return new Booking({
+        bookingID: d.id,
+        hotelID: data.hotelID,
+        hotelDetails: {
+          name: hotelData.name,
+          address: hotelData.address,
+          starRating: hotelData.starRating,
+        },
+        customerID,
+        roomDetails,
+        checkInDate: data.checkInDate.toDate(),
+        checkOutDate: data.checkOutDate.toDate(),
+        checkedOutAt: data.checkedOutAt?.toDate(),
+        cancellationGracePeriod: data.cancellationGracePeriod,
+        totalAmount: data.totalAmount,
+        status: data.status,
+        paymentStatus,
+        hasInvoice,
+        createdAt: data.createdAt.toDate(),
+      });
+    })
+  );
+  return bookings;
+};
+
 exports.listHotelBookings = async (hotelId) => {
   const snap = await bookingsCol.where("hotelID", "==", hotelId).get();
   return snap.docs.map((d) => {

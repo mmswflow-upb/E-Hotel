@@ -26,9 +26,22 @@ exports.listMine = async (req, res) => {
   res.json(list);
 };
 
+exports.listAllMine = async (req, res) => {
+  try {
+    const list = await bookingSvc.listAllUserBookings(req.user.uid);
+    res.json(list);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
 exports.listAll = async (req, res) => {
-  const all = await bookingSvc.listHotelBookings(req.params.hotelId);
-  res.json(all);
+  try {
+    const all = await bookingSvc.listHotelBookings(req.params.hotelId);
+    res.json(all);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 };
 
 exports.cancel = async (req, res) => {

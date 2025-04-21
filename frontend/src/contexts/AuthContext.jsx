@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
         }
         const claims = (await u.getIdTokenResult()).claims;
         setUser(u);
-        setRole(claims.role || "Tourist");
+        setRole(claims.role || "Customer");
         setLd(false);
       }),
     []

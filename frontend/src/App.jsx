@@ -31,24 +31,10 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/hotels" element={<Hotels />} />
+          <Route path="/hotels/:hotelId" element={<HotelRooms />} />
 
-          {/* tourist‑level */}
-          <Route
-            path="/hotels"
-            element={
-              <Protected>
-                <Hotels />
-              </Protected>
-            }
-          />
-          <Route
-            path="/hotels/:hotelId"
-            element={
-              <Protected>
-                <HotelRooms />
-              </Protected>
-            }
-          />
+          {/* protected */}
           <Route
             path="/profile"
             element={
