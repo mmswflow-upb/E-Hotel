@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Footer() {
   const { isDarkMode } = useTheme();
+  const { user, role } = useAuth();
 
   return (
     <footer
@@ -33,30 +35,97 @@ export default function Footer() {
                   Home
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/hotels"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
-                >
-                  Hotels
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/login"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/register"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
-                >
-                  Register
-                </Link>
-              </li>
+              {!user ? (
+                <>
+                  <li>
+                    <Link
+                      to="/login"
+                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                    >
+                      Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/register"
+                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                    >
+                      Register
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  {role === "Customer" && (
+                    <>
+                      <li>
+                        <Link
+                          to="/hotels"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Hotels
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/my-bookings"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          My Bookings
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/profile"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Profile
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                  {["HotelManager", "SystemAdmin"].includes(role) && (
+                    <>
+                      <li>
+                        <Link
+                          to="/hotels"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Manage Hotels
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/stats"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Stats
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                  {["Receptionist", "SystemAdmin"].includes(role) && (
+                    <>
+                      <li>
+                        <Link
+                          to="/reception"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Bookings
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/reception/cancellations"
+                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        >
+                          Requests
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                </>
+              )}
             </ul>
           </div>
 

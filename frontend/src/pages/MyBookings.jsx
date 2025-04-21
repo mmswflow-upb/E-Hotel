@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
 import scheduledIcon from "../assets/scheduled.png";
+import bedRoomIcon from "../assets/bed-room.png";
+import doubleBedRoomIcon from "../assets/double-bed-room.png";
+import approvedIcon from "../assets/approved.png";
+import deniedIcon from "../assets/denied.png";
+import invoiceIcon from "../assets/invoice.png";
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState({
@@ -26,45 +31,32 @@ export default function MyBookings() {
 
   const BookingCard = ({ booking }) => (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {booking.hotelDetails.name}
-        </h3>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            booking.status === "booked"
-              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-              : booking.status === "occupied"
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : booking.status === "completed"
-              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-          }`}
-        >
-          {booking.status}
-        </span>
-      </div>
       <div className="space-y-4">
         <div className="space-y-2">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {booking.hotelDetails.name}
+          </h3>
           <p className="text-gray-600 dark:text-gray-300">
+            <span className="font-medium">Rating:</span>{" "}
+            {[...Array(5)].map((_, index) => (
+              <span
+                key={index}
+                className={`text-xl ${
+                  index < booking.hotelDetails.starRating
+                    ? "text-yellow-400"
+                    : "text-gray-300 dark:text-gray-600"
+                }`}
+              >
+                ★
+              </span>
+            ))}
+          </p>
+          <p className="text-gray-600 dark:text-gray-300">
+            <span className="font-medium">Address:</span>{" "}
             {booking.hotelDetails.address}
           </p>
-          <p className="text-gray-600 dark:text-gray-300">
-            {booking.hotelDetails.starRating}★
-          </p>
         </div>
-        <div>
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-            Rooms:
-          </h4>
-          <ul className="space-y-1">
-            {booking.roomDetails.map((room, index) => (
-              <li key={index} className="text-gray-600 dark:text-gray-300">
-                Room {room.roomNumber} ({room.type})
-              </li>
-            ))}
-          </ul>
-        </div>
+
         <div className="space-y-2">
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Check-in:</span>{" "}
@@ -81,12 +73,24 @@ export default function MyBookings() {
             </p>
           )}
         </div>
+
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Total:</span> ${booking.totalAmount}
           </p>
-          <p className="text-gray-600 dark:text-gray-300">
-            <span className="font-medium">Payment Status:</span>{" "}
+          <p className="text-gray-600 dark:text-gray-300 flex items-center gap-2">
+            <span className="font-medium">Payment Status:</span>
+            <img
+              src={
+                booking.paymentStatus === "approved" ? approvedIcon : deniedIcon
+              }
+              alt={booking.paymentStatus}
+              className={`h-5 w-5 ${
+                booking.paymentStatus === "approved"
+                  ? ""
+                  : "dark:invert dark:brightness-0 dark:opacity-80"
+              }`}
+            />
             <span
               className={`px-2 py-1 rounded text-sm ${
                 booking.paymentStatus === "pending"
@@ -111,8 +115,13 @@ export default function MyBookings() {
         {booking.hasInvoice && (
           <Link
             to={`/bookings/${booking.bookingID}/invoice`}
-            className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center"
+            className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center flex items-center justify-center gap-2"
           >
+            <img
+              src={invoiceIcon}
+              alt="Invoice"
+              className="h-5 w-5 invert brightness-0 opacity-80"
+            />
             View Invoice
           </Link>
         )}
