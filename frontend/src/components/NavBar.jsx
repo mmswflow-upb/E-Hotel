@@ -30,9 +30,9 @@ export default function NavBar() {
               <img
                 src={fiveStarsIcon}
                 alt="E-Hotels Logo"
-                className="h-8 w-8 dark:invert dark:brightness-0 dark:opacity-80"
+                className="h-12 w-12 dark:invert dark:brightness-0 dark:opacity-80"
               />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
+              <span className="text-3xl font-bold text-gray-900 dark:text-white">
                 E-Hotels
               </span>
             </Link>
