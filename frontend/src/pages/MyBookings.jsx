@@ -33,9 +33,26 @@ export default function MyBookings() {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
       <div className="space-y-4">
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {booking.hotelDetails.name}
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              {booking.hotelDetails.name}
+            </h3>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                booking.status === "booked"
+                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  : booking.status === "occupied"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : booking.status === "completed"
+                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                  : booking.status === "canceled"
+                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+              }`}
+            >
+              {booking.status}
+            </span>
+          </div>
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Rating:</span>{" "}
             {[...Array(5)].map((_, index) => (
