@@ -164,6 +164,7 @@ async function seed() {
         roomNumber: (h * 100 + r).toString(),
         type: r % 2 ? "single" : "double",
         status: "available",
+        pricePerNight: r % 2 ? 100 : 150, // Single rooms cost 100, double rooms cost 150
       });
       roomIDs[hotelID].push(rid);
     }
@@ -195,12 +196,26 @@ async function seed() {
       });
       bookings.push({ bookingID, hotelID, cust: cust.uid, amount: amt });
 
+      // Add service requests with specific prices
       await add("serviceRequests", {
         hotelID,
         bookingID,
         serviceType: "breakfast",
         price: 15,
       });
+      await add("serviceRequests", {
+        hotelID,
+        bookingID,
+        serviceType: "dinner",
+        price: 25,
+      });
+      await add("serviceRequests", {
+        hotelID,
+        bookingID,
+        serviceType: "internet",
+        price: 10,
+      });
+
       await add("paymentTransactions", {
         hotelID,
         bookingID,
@@ -266,4 +281,4 @@ async function seed() {
 }
 
 /* exported for server.js */
-module.exports = seed;
+module.exports = { seed };

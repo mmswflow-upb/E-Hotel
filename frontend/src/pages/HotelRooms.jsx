@@ -30,11 +30,19 @@ export default function HotelRooms() {
         setErr("Check‑out must be after check‑in");
         return;
       }
+      const room = rooms.find((r) => r.roomNumber === num);
+      if (!room) {
+        setErr("Room not found");
+        return;
+      }
+      const nights = Math.ceil((coD - ciD) / (1000 * 60 * 60 * 24));
+      const totalAmount = room.pricePerNight * nights;
+
       await api.post(`/hotels/${hotelId}/bookings`, {
         roomDetails: [num],
         checkInDate: ciD.toISOString(),
         checkOutDate: coD.toISOString(),
-        totalAmount: 200,
+        totalAmount,
       });
       setMsg("Booked!");
       const r = await api.get(`/hotels/${hotelId}/rooms`);
@@ -76,6 +84,7 @@ export default function HotelRooms() {
             <h3>Room {r.roomNumber}</h3>
             <p>Type: {r.type}</p>
             <p>Status: {r.status}</p>
+            <p>Price per night: ${r.pricePerNight}</p>
             {r.status === "available" && (
               <button onClick={() => book(r.roomNumber)}>Book</button>
             )}
