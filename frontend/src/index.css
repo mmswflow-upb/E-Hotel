@@ -4,23 +4,23 @@
 
 @layer base {
   body {
-    @apply m-0 font-sans bg-gray-900 text-white;
+    @apply m-0 font-sans bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
   }
 
   ::selection {
-    @apply bg-primary/30 text-white;
+    @apply bg-primary/30 text-gray-900 dark:text-white;
   }
 
   input, button, select {
-    @apply w-full my-1 px-4 py-2 border-0 rounded font-sans bg-white text-gray-900;
+    @apply w-full my-1 px-4 py-2 border-0 rounded font-sans bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
   }
 
   input::placeholder {
-    @apply text-gray-500;
+    @apply text-gray-500 dark:text-gray-400;
   }
 
   select {
-    @apply bg-white text-gray-900 cursor-pointer;
+    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer;
   }
 
   button {
@@ -32,7 +32,7 @@
   }
 
   td, th {
-    @apply border border-gray-600 p-2 text-left;
+    @apply border border-gray-300 dark:border-gray-600 p-2 text-left;
   }
 }
 
@@ -46,7 +46,7 @@
   }
 
   .card {
-    @apply bg-secondary p-4 rounded-lg shadow-md;
+    @apply bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md;
   }
 
   .booking-list {
@@ -54,7 +54,7 @@
   }
 
   .booking-card {
-    @apply bg-secondary p-6 rounded-lg shadow-md;
+    @apply bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md;
   }
 
   .booking-header {
@@ -78,7 +78,7 @@
   }
 
   .booking-actions a {
-    @apply text-primary no-underline px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors;
+    @apply text-primary no-underline px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
   }
 
   .status-badge {
@@ -134,7 +134,7 @@
   }
 
   .dates label {
-    @apply flex flex-col text-sm;
+    @apply flex flex-col text-sm text-gray-700 dark:text-gray-300;
   }
 }
 
