@@ -71,9 +71,7 @@ export default function App() {
           <Route
             path="/reception"
             element={
-              <Protected
-                roles={["Receptionist", "HotelManager", "SystemAdmin"]}
-              >
+              <Protected roles={["Receptionist", "SystemAdmin"]}>
                 <Reception />
               </Protected>
             }

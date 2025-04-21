@@ -17,8 +17,10 @@ export default function NavBar() {
       {user ? (
         <>
           <Link to="/profile">Profile</Link>
-          <Link to="/my-bookings">My bookings</Link>
-          {["Receptionist", "HotelManager", "SystemAdmin"].includes(role) && (
+          {["Tourist", "Customer"].includes(role) && (
+            <Link to="/my-bookings">My bookings</Link>
+          )}
+          {["Receptionist", "SystemAdmin"].includes(role) && (
             <Link to="/reception">Reception</Link>
           )}
           {["HotelManager", "SystemAdmin"].includes(role) && (

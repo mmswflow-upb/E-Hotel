@@ -26,10 +26,12 @@ export default function Home() {
             <li className="card">
               <Link to="/hotels">Browse hotels</Link>
             </li>
-            <li className="card">
-              <Link to="/my-bookings">My bookings</Link>
-            </li>
-            {["Receptionist", "HotelManager", "SystemAdmin"].includes(role) && (
+            {["Tourist", "Customer"].includes(role) && (
+              <li className="card">
+                <Link to="/my-bookings">My bookings</Link>
+              </li>
+            )}
+            {["Receptionist", "SystemAdmin"].includes(role) && (
               <li className="card">
                 <Link to="/reception">Reception dashboard</Link>
               </li>
