@@ -14,6 +14,22 @@ export default function HotelRooms() {
   const [ci, setCi] = useState(today);
   const [co, setCo] = useState(today);
 
+  // Function to update dates and ensure check-out is after check-in
+  const updateDates = (newCi, newCo) => {
+    const ciDate = new Date(newCi);
+    const coDate = new Date(newCo);
+
+    // If check-out is before or same as check-in, set it to one day after check-in
+    if (coDate <= ciDate) {
+      const nextDay = new Date(ciDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      newCo = nextDay.toISOString().split("T")[0];
+    }
+
+    setCi(newCi);
+    setCo(newCo);
+  };
+
   // Function to fetch rooms with date parameters
   const fetchRooms = async () => {
     setLoading(true);
@@ -79,7 +95,8 @@ export default function HotelRooms() {
           <input
             type="date"
             value={ci}
-            onChange={(e) => setCi(e.target.value)}
+            onChange={(e) => updateDates(e.target.value, co)}
+            min={today}
           />
         </label>
         <label>
@@ -87,7 +104,8 @@ export default function HotelRooms() {
           <input
             type="date"
             value={co}
-            onChange={(e) => setCo(e.target.value)}
+            onChange={(e) => updateDates(ci, e.target.value)}
+            min={ci}
           />
         </label>
         <button
