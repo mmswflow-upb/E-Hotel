@@ -21,6 +21,7 @@ const COLLECTIONS = [
   "cancellations",
   "paymentTransactions",
   "invoices",
+  "services",
   "serviceRequests",
   "stats",
 ];
@@ -135,16 +136,79 @@ async function seed() {
       });
   }
 
-  /* 2. hotels + rooms */
+  /* 2. Create services */
+  console.log("✨ Services");
+  const serviceIDs = [];
+  const services = [
+    {
+      name: "WiFi",
+      cost: 10,
+      isOneTime: false,
+      description: "High-speed internet access",
+    },
+    {
+      name: "Breakfast",
+      cost: 15,
+      isOneTime: true,
+      description: "Daily breakfast buffet",
+    },
+    {
+      name: "Pool Access",
+      cost: 20,
+      isOneTime: false,
+      description: "Access to hotel pool",
+    },
+    { name: "Spa", cost: 50, isOneTime: false, description: "Spa services" },
+    {
+      name: "Parking",
+      cost: 15,
+      isOneTime: false,
+      description: "Secure parking space",
+    },
+    {
+      name: "Room Service",
+      cost: 25,
+      isOneTime: false,
+      description: "24/7 room service",
+    },
+    {
+      name: "Gym Access",
+      cost: 15,
+      isOneTime: false,
+      description: "Access to fitness center",
+    },
+    {
+      name: "Laundry",
+      cost: 20,
+      isOneTime: false,
+      description: "Laundry service",
+    },
+  ];
+
+  for (const service of services) {
+    const serviceID = await add("services", service);
+    serviceIDs.push(serviceID);
+  }
+
+  /* 3. hotels + rooms */
   console.log("✨ Hotels & rooms");
   const hotelIDs = [],
     roomIDs = {};
   for (let h = 1; h <= 5; h++) {
+    // Assign random services to each hotel
+    const availableServiceIDs = serviceIDs
+      .sort(() => 0.5 - rand())
+      .slice(0, Math.floor(rand() * 3) + 3); // Each hotel gets 3-5 random services
+
     const hotelID = await add("hotels", {
       name: `Hotel ${h}`,
       address: `${h} Main`,
       starRating: 3 + (h % 3),
       totalRooms: 5,
+      description: `Welcome to Hotel ${h}, a ${
+        3 + (h % 3)
+      }-star establishment located in the heart of the city. Our hotel offers comfortable accommodations and excellent service to make your stay memorable.`,
+      availableServiceIDs,
     });
     hotelIDs.push(hotelID);
     roomIDs[hotelID] = [];
@@ -164,13 +228,13 @@ async function seed() {
         roomNumber: (h * 100 + r).toString(),
         type: r % 2 ? "single" : "double",
         status: "available",
-        pricePerNight: r % 2 ? 100 : 150, // Single rooms cost 100, double rooms cost 150
+        pricePerNight: r % 2 ? 100 : 150,
       });
       roomIDs[hotelID].push(rid);
     }
   }
 
-  /* 3. bookings, payments, invoices */
+  /* 4. bookings, payments, invoices */
   console.log("✨ Bookings / payments / invoices");
   const now = new Date(),
     bookings = [];
@@ -196,24 +260,63 @@ async function seed() {
       });
       bookings.push({ bookingID, hotelID, cust: cust.uid, amount: amt });
 
-      // Add service requests with specific prices
-      await add("serviceRequests", {
+      // Create service requests for the booking
+      const hotel = await db.collection("hotels").doc(hotelID).get();
+      const availableServices = hotel.data().availableServiceIDs;
+
+      // Randomly select some services for this booking
+      const selectedServices = availableServices
+        .sort(() => 0.5 - rand())
+        .slice(0, Math.floor(rand() * 3) + 1); // 1-3 services per booking
+
+      const serviceCharges = [];
+      for (const serviceID of selectedServices) {
+        const service = await db.collection("services").doc(serviceID).get();
+        const serviceData = service.data();
+
+        await add("serviceRequests", {
+          hotelID,
+          bookingID,
+          serviceID,
+          roomID,
+          quantity: serviceData.isOneTime ? 1 : Math.floor(rand() * 3) + 1,
+          totalCost: serviceData.isOneTime
+            ? serviceData.cost
+            : serviceData.cost * (Math.floor(rand() * 3) + 1),
+          status: "requested",
+        });
+
+        serviceCharges.push({
+          serviceID,
+          name: serviceData.name,
+          cost: serviceData.cost,
+          quantity: serviceData.isOneTime ? 1 : Math.floor(rand() * 3) + 1,
+          total: serviceData.isOneTime
+            ? serviceData.cost
+            : serviceData.cost * (Math.floor(rand() * 3) + 1),
+        });
+      }
+
+      // Create invoice with room and service charges
+      const totalServiceCost = serviceCharges.reduce(
+        (sum, charge) => sum + charge.total,
+        0
+      );
+      await add("invoices", {
         hotelID,
         bookingID,
-        serviceType: "breakfast",
-        price: 15,
-      });
-      await add("serviceRequests", {
-        hotelID,
-        bookingID,
-        serviceType: "dinner",
-        price: 25,
-      });
-      await add("serviceRequests", {
-        hotelID,
-        bookingID,
-        serviceType: "internet",
-        price: 10,
+        roomCharges: [
+          {
+            roomID,
+            pricePerNight: amt,
+            nights: 2,
+            total: amt * 2,
+          },
+        ],
+        serviceCharges,
+        totalAmount: amt * 2 + totalServiceCost,
+        issueDate: admin.firestore.Timestamp.fromDate(co),
+        status: "pending",
       });
 
       await add("paymentTransactions", {
@@ -224,17 +327,10 @@ async function seed() {
         transactionDate: admin.firestore.Timestamp.fromDate(ci),
         status: "approved",
       });
-      await add("invoices", {
-        hotelID,
-        bookingID,
-        itemizedCharges: [`Room:${amt}`, "Breakfast:15"],
-        totalAmount: amt + 15,
-        issueDate: admin.firestore.Timestamp.fromDate(co),
-      });
     }
   }
 
-  /* 4. cancellations */
+  /* 5. cancellations */
   console.log("✨ Cancellations");
   for (const cust of customers) {
     const mine = bookings.filter((b) => b.cust === cust.uid);
@@ -255,7 +351,7 @@ async function seed() {
     }
   }
 
-  /* 5. stats */
+  /* 6. stats */
   console.log("✨ Monthly stats");
   const base = new Date();
   for (const hotelID of hotelIDs) {

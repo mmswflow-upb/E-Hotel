@@ -3,7 +3,7 @@ const { db, admin } = require("../firebase");
 const Booking = require("../models/Booking");
 const CancellationRecord = require("../models/CancellationRecord");
 const PaymentTransaction = require("../models/PaymentTransaction");
-const Invoice = require("../models/Invoice");
+const Invoice = require("../models/invoice");
 const roomService = require("./roomService");
 
 const bookingsCol = db.collection("bookings");

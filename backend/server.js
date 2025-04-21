@@ -15,7 +15,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Mount API routes
+// Mount all routes under /api
 app.use("/api", api);
 
 // Error handling middleware

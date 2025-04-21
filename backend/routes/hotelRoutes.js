@@ -1,12 +1,12 @@
-// routes/hotels.js
+// routes/hotelRoutes.js
 const express = require("express");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
 const hotelCtrl = require("../controllers/hotelController");
-const roomsR = require("./rooms");
-const bookingsR = require("./bookings");
-const checkR = require("./check");
-const statsR = require("./stats");
+const roomRoutes = require("./roomRoutes");
+const bookingRoutes = require("./bookingRoutes");
+const checkRoutes = require("./checkRoutes");
+const statRoutes = require("./statRoutes");
 
 const router = express.Router();
 
@@ -38,9 +38,9 @@ router.get("/:hotelId", hotelCtrl.getHotelById);
 router.post("/", role("SystemAdmin"), hotelCtrl.create);
 
 // Hotel-scoped routes
-router.use("/:hotelId/rooms", roomsR);
-router.use("/:hotelId/bookings", bookingsR);
-router.use("/:hotelId/bookings", checkR);
-router.use("/:hotelId/stats", statsR);
+router.use("/:hotelId/rooms", roomRoutes);
+router.use("/:hotelId/bookings", bookingRoutes);
+router.use("/:hotelId/bookings", checkRoutes);
+router.use("/:hotelId/stats", statRoutes);
 
 module.exports = router;

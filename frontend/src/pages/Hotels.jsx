@@ -55,6 +55,11 @@ export default function Hotels() {
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Address:</span> {hotel.address}
           </p>
+          {hotel.description && (
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              {hotel.description}
+            </p>
+          )}
         </div>
 
         <Link

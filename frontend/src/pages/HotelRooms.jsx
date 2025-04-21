@@ -11,6 +11,11 @@ import mapPinIcon from "../assets/map-pin.png";
 import wifiIcon from "../assets/wifi.png";
 import restaurantIcon from "../assets/restaurant.png";
 import poolIcon from "../assets/pool.png";
+import spaIcon from "../assets/spa.png";
+import parkingIcon from "../assets/parking.png";
+import gymIcon from "../assets/gym.png";
+import laundryIcon from "../assets/laundry.png";
+import hotelIcon from "../assets/hotel.png";
 
 export default function HotelRooms() {
   const { hotelId } = useParams();
@@ -52,7 +57,7 @@ export default function HotelRooms() {
     }
   }, [user]);
 
-  // Fetch hotel details
+  // Fetch hotel details (which now includes services)
   useEffect(() => {
     if (!user) return; // Don't fetch if not authenticated
 
@@ -266,76 +271,94 @@ export default function HotelRooms() {
   const HotelHeader = () => {
     if (!hotel) return null;
 
+    const getServiceIcon = (serviceName) => {
+      const iconMap = {
+        WiFi: wifiIcon,
+        Breakfast: restaurantIcon,
+        "Pool Access": poolIcon,
+        Spa: hotelIcon,
+        Parking: hotelIcon,
+        "Room Service": restaurantIcon,
+        "Gym Access": hotelIcon,
+        Laundry: hotelIcon,
+      };
+      return iconMap[serviceName] || hotelIcon;
+    };
+
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 mb-8">
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {hotel.name}
-          </h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {hotel.name}
+            </h1>
 
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-            <img
-              src={mapPinIcon}
-              alt="Location"
-              className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-            />
-            <p>{hotel.address}</p>
-          </div>
-
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, index) => (
-              <span
-                key={index}
-                className={`text-xl ${
-                  index < hotel.starRating
-                    ? "text-yellow-400"
-                    : "text-gray-300 dark:text-gray-600"
-                }`}
-              >
-                ★
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, index) => (
+                <span
+                  key={index}
+                  className={`text-xl ${
+                    index < hotel.starRating
+                      ? "text-yellow-400"
+                      : "text-gray-300 dark:text-gray-600"
+                  }`}
+                >
+                  ★
+                </span>
+              ))}
+              <span className="ml-2 text-gray-600 dark:text-gray-300">
+                ({hotel.starRating})
               </span>
-            ))}
-            <span className="ml-2 text-gray-600 dark:text-gray-300">
-              ({hotel.starRating} stars)
-            </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+              <img
+                src={mapPinIcon}
+                alt="Location"
+                className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+              />
+              <p>{hotel.address}</p>
+            </div>
           </div>
 
           <p className="text-gray-700 dark:text-gray-300">
             {hotel.description}
           </p>
 
-          <div className="flex flex-wrap gap-4">
-            {hotel.amenities?.includes("wifi") && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <img
-                  src={wifiIcon}
-                  alt="WiFi"
-                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-                />
-                <span>Free WiFi</span>
+          {/* Services Section */}
+          {hotel.availableServices && hotel.availableServices.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Available Services
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {hotel.availableServices.map((service) => (
+                  <div
+                    key={service.serviceID}
+                    className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  >
+                    <img
+                      src={getServiceIcon(service.name)}
+                      alt={service.name}
+                      className="w-6 h-6 mt-1 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        {service.name}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {service.description}
+                      </p>
+                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
+                        ${service.cost}{" "}
+                        {service.isOneTime ? "one-time" : "per use"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-            {hotel.amenities?.includes("restaurant") && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <img
-                  src={restaurantIcon}
-                  alt="Restaurant"
-                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-                />
-                <span>Restaurant</span>
-              </div>
-            )}
-            {hotel.amenities?.includes("pool") && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <img
-                  src={poolIcon}
-                  alt="Pool"
-                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-                />
-                <span>Swimming Pool</span>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
