@@ -128,9 +128,9 @@ async function seed() {
       .doc(u.uid)
       .set({
         name: `Customer ${i + 1}`,
-        email: u.email,
-        contactInfo: `contact${i + 1}@example.com`,
-        identification: `ID${i + 1}`,
+        phoneNumber: `+123456789${i}`,
+        idType: ["passport", "id_card", "driver_license"][i % 3],
+        idNumber: `ID${i + 1}`,
         balance: Number(Math.floor(rand() * 1000)), // Ensure balance is stored as a number
       });
   }

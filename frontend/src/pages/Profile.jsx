@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import profileIcon from "../assets/profile.png";
+import phoneIcon from "../assets/phone-call.png";
+import idCardIcon from "../assets/id-card.png";
+import moneyIcon from "../assets/money.png";
 
 export default function Profile() {
   const { role } = useAuth();
@@ -87,7 +90,14 @@ export default function Profile() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Name
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={profileIcon}
+                        alt="Name"
+                        className="h-4 w-4 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Name
+                    </div>
                   </label>
                   <input
                     name="name"
@@ -99,11 +109,18 @@ export default function Profile() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Contact Information
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={phoneIcon}
+                        alt="Phone"
+                        className="h-4 w-4 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Phone Number
+                    </div>
                   </label>
                   <input
-                    name="contactInfo"
-                    value={userData.contactInfo || ""}
+                    name="phoneNumber"
+                    value={userData.phoneNumber || ""}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
@@ -111,11 +128,42 @@ export default function Profile() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Identification
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={idCardIcon}
+                        alt="ID Type"
+                        className="h-4 w-4 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      ID Type
+                    </div>
+                  </label>
+                  <select
+                    name="idType"
+                    value={userData.idType || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select ID Type</option>
+                    <option value="passport">Passport</option>
+                    <option value="id_card">ID Card</option>
+                    <option value="driver_license">Driver's License</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={idCardIcon}
+                        alt="ID Number"
+                        className="h-4 w-4 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      ID Number
+                    </div>
                   </label>
                   <input
-                    name="identification"
-                    value={userData.identification || ""}
+                    name="idNumber"
+                    value={userData.idNumber || ""}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                   />
@@ -123,7 +171,14 @@ export default function Profile() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Balance
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={moneyIcon}
+                        alt="Balance"
+                        className="h-4 w-4 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Balance
+                    </div>
                   </label>
                   <input
                     name="balance"

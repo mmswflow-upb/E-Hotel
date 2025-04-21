@@ -1,6 +1,6 @@
 // services/customerService.js
 const { db, admin } = require("../firebase");
-const Customer = require("../models/Customer");
+const Customer = require("../models/customer");
 
 const customersCol = db.collection("customers");
 
@@ -13,9 +13,10 @@ exports.getCustomer = async (customerID) => {
   const d = doc.data();
   return new Customer({
     customerID: doc.id,
-    name: d.name,
-    contactInfo: d.contactInfo,
-    identification: d.identification,
+    name: d.name || "",
+    phoneNumber: d.phoneNumber || "",
+    idType: d.idType || "",
+    idNumber: d.idNumber || "",
     balance: Number(d.balance) || 0,
   });
 };
@@ -25,22 +26,24 @@ exports.getCustomer = async (customerID) => {
  */
 exports.createOrUpdateCustomer = async (
   customerID,
-  { name, contactInfo, identification, balance }
+  { name, phoneNumber, idType, idNumber, balance }
 ) => {
   const payload = {
-    name,
-    contactInfo,
-    identification,
+    name: name || "",
+    phoneNumber: phoneNumber || "",
+    idType: idType || "",
+    idNumber: idNumber || "",
     balance: Number(balance) || 0,
     updatedAt: admin.firestore.Timestamp.now(),
   };
   await customersCol.doc(customerID).set(payload, { merge: true });
   return new Customer({
     customerID,
-    name,
-    contactInfo,
-    identification,
-    balance,
+    name: name || "",
+    phoneNumber: phoneNumber || "",
+    idType: idType || "",
+    idNumber: idNumber || "",
+    balance: Number(balance) || 0,
   });
 };
 
@@ -53,9 +56,10 @@ exports.listCustomers = async () => {
     const d = doc.data();
     return new Customer({
       customerID: doc.id,
-      name: d.name,
-      contactInfo: d.contactInfo,
-      identification: d.identification,
+      name: d.name || "",
+      phoneNumber: d.phoneNumber || "",
+      idType: d.idType || "",
+      idNumber: d.idNumber || "",
       balance: Number(d.balance) || 0,
     });
   });

@@ -8,6 +8,8 @@ import hotelIcon from "../assets/hotel.png";
 import myBookingsIcon from "../assets/myBookings.png";
 import profileIcon from "../assets/profile.png";
 import fiveStarsIcon from "../assets/five-stars.png";
+import statsIcon from "../assets/stats.png";
+import requestIcon from "../assets/request.png";
 
 export default function NavBar() {
   const { user, role } = useAuth();
@@ -36,17 +38,19 @@ export default function NavBar() {
             </Link>
             {user && (
               <>
-                <Link
-                  to="/hotels"
-                  className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
-                >
-                  <img
-                    src={hotelIcon}
-                    alt="Hotels"
-                    className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
-                  />
-                  Hotels
-                </Link>
+                {role === "Customer" && (
+                  <Link
+                    to="/hotels"
+                    className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                  >
+                    <img
+                      src={hotelIcon}
+                      alt="Hotels"
+                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    Hotels
+                  </Link>
+                )}
                 {role === "Customer" && (
                   <Link
                     to="/profile"
@@ -74,20 +78,56 @@ export default function NavBar() {
                   </Link>
                 )}
                 {["Receptionist", "SystemAdmin"].includes(role) && (
-                  <Link
-                    to="/reception"
-                    className="text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
-                  >
-                    Reception
-                  </Link>
+                  <>
+                    <Link
+                      to="/reception"
+                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    >
+                      <img
+                        src={myBookingsIcon}
+                        alt="Bookings"
+                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Bookings
+                    </Link>
+                    <Link
+                      to="/reception/cancellations"
+                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    >
+                      <img
+                        src={requestIcon}
+                        alt="Requests"
+                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Requests
+                    </Link>
+                  </>
                 )}
                 {["HotelManager", "SystemAdmin"].includes(role) && (
-                  <Link
-                    to="/stats"
-                    className="text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
-                  >
-                    Stats
-                  </Link>
+                  <>
+                    <Link
+                      to="/hotels"
+                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    >
+                      <img
+                        src={hotelIcon}
+                        alt="Hotels"
+                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Hotels
+                    </Link>
+                    <Link
+                      to="/stats"
+                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    >
+                      <img
+                        src={statsIcon}
+                        alt="Stats"
+                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Stats
+                    </Link>
+                  </>
                 )}
               </>
             )}

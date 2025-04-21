@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import hotelIcon from "../assets/hotel.png";
 import myBookingsIcon from "../assets/myBookings.png";
 import profileIcon from "../assets/profile.png";
+import statsIcon from "../assets/stats.png";
 
 export default function Home() {
   const { user, role } = useAuth();
@@ -36,22 +37,24 @@ export default function Home() {
               Welcome back, {user.displayName || user.email?.split("@")[0]}!
             </p>
             <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Discover and book rooms at our premium hotels
-                </p>
-                <Link
-                  to="/hotels"
-                  className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                >
-                  <img
-                    src={hotelIcon}
-                    alt="Hotels"
-                    className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
-                  />
-                  Browse hotels
-                </Link>
-              </div>
+              {role === "Customer" && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Discover and book rooms at our premium hotels
+                  </p>
+                  <Link
+                    to="/hotels"
+                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    <img
+                      src={hotelIcon}
+                      alt="Hotels"
+                      className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    Browse hotels
+                  </Link>
+                </div>
+              )}
               {role === "Customer" && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -70,7 +73,7 @@ export default function Home() {
                   </Link>
                 </div>
               )}
-              {user && (
+              {role === "Customer" && (
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Update your personal information and preferences
@@ -89,30 +92,66 @@ export default function Home() {
                 </div>
               )}
               {["Receptionist", "SystemAdmin"].includes(role) && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Manage hotel check-ins, check-outs, and guest services
-                  </p>
-                  <Link
-                    to="/reception"
-                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                  >
-                    Reception dashboard
-                  </Link>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Manage bookings, check-ins, check-outs, and guest services
+                    </p>
+                    <Link
+                      to="/reception"
+                      className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                    >
+                      Manage Bookings
+                    </Link>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Handle booking cancellation requests and process refunds
+                    </p>
+                    <Link
+                      to="/reception/cancellations"
+                      className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                    >
+                      Manage Requests
+                    </Link>
+                  </div>
+                </>
               )}
               {["HotelManager", "SystemAdmin"].includes(role) && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    View hotel performance metrics and analytics
-                  </p>
-                  <Link
-                    to="/stats"
-                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                  >
-                    Monthly stats
-                  </Link>
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Manage hotel operations, rooms, and services
+                    </p>
+                    <Link
+                      to="/hotels"
+                      className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                    >
+                      <img
+                        src={hotelIcon}
+                        alt="Hotels"
+                        className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Manage Hotels
+                    </Link>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      View hotel performance metrics and analytics
+                    </p>
+                    <Link
+                      to="/stats"
+                      className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                    >
+                      <img
+                        src={statsIcon}
+                        alt="Stats"
+                        className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                      />
+                      Monthly Stats
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
           </div>
