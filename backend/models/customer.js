@@ -10,17 +10,13 @@
 class Customer {
   constructor({
     customerID,
-    name,
-    phoneNumber,
-    idType,
-    idNumber,
+    name = "",
+    phoneNumber = "",
+    idType = "",
+    idNumber = "",
     balance = 0,
   }) {
     if (!customerID) throw new Error("Customer ID is required");
-    if (!name) throw new Error("Name is required");
-    if (!phoneNumber) throw new Error("Phone number is required");
-    if (!idType) throw new Error("ID type is required");
-    if (!idNumber) throw new Error("ID number is required");
 
     this.customerID = customerID;
     this.name = name;

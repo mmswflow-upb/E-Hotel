@@ -5,6 +5,8 @@ import profileIcon from "../assets/profile.png";
 import phoneIcon from "../assets/phone-call.png";
 import idCardIcon from "../assets/id-card.png";
 import moneyIcon from "../assets/money.png";
+import approvedIcon from "../assets/approved.png";
+import deniedIcon from "../assets/denied.png";
 
 export default function Profile() {
   const { role } = useAuth();
@@ -25,6 +27,16 @@ export default function Profile() {
     fetchUserData();
   }, [role]);
 
+  // Add effect to clear success message after 3 seconds
+  useEffect(() => {
+    if (msg) {
+      const timer = setTimeout(() => {
+        setMsg("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [msg]);
+
   function handleChange(e) {
     setUserData({ ...userData, [e.target.name]: e.target.value });
   }
@@ -36,7 +48,9 @@ export default function Profile() {
       await api.put("/accounts/me", userData);
       setMsg("Profile updated successfully");
     } catch (e) {
-      setErr(e.message);
+      // Extract error message from response if available
+      const errorMessage = e.response?.data?.error || e.message;
+      setErr(errorMessage);
     }
   }
 
@@ -193,13 +207,23 @@ export default function Profile() {
 
             <button
               onClick={save}
-              className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-700"
             >
               Save Changes
             </button>
 
-            {msg && <p className="text-green-500 text-center">{msg}</p>}
-            {err && <p className="text-red-500 text-center">{err}</p>}
+            {msg && (
+              <div className="flex items-center justify-center gap-2">
+                <img src={approvedIcon} alt="Success" className="h-5 w-5" />
+                <p className="text-green-500">{msg}</p>
+              </div>
+            )}
+            {err && (
+              <div className="flex items-center justify-center gap-2">
+                <img src={deniedIcon} alt="Error" className="h-5 w-5" />
+                <p className="text-red-500">{err}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

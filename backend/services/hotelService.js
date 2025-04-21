@@ -53,3 +53,26 @@ exports.createHotel = async ({ name, address, starRating, totalRooms }) => {
   const d = await ref.get();
   return new Hotel({ hotelID: d.id, ...d.data() });
 };
+
+exports.getHotelById = async (hotelId) => {
+  try {
+    const doc = await hotelsCol.doc(hotelId).get();
+    if (!doc.exists) {
+      return null;
+    }
+    const data = doc.data();
+    return new Hotel({
+      hotelID: doc.id,
+      name: data.name || "Unnamed Hotel",
+      starRating: data.starRating || 0,
+      address: data.address || "No address",
+      totalRooms: data.totalRooms || 0,
+      description: data.description || "",
+      amenities: data.amenities || [],
+      image: data.image || null,
+    });
+  } catch (error) {
+    console.error("Error fetching hotel by ID:", error);
+    throw error;
+  }
+};

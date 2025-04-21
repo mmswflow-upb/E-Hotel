@@ -1,24 +1,84 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import roomIcon from "../assets/room.png";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import calendarIcon from "../assets/calendar.png";
+// Import local icons
+import mapPinIcon from "../assets/map-pin.png";
+import wifiIcon from "../assets/wifi.png";
+import restaurantIcon from "../assets/restaurant.png";
+import poolIcon from "../assets/pool.png";
 
 export default function HotelRooms() {
   const { hotelId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
+  const [hotel, setHotel] = useState(null);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userAccount, setUserAccount] = useState(null);
 
   // date state
   const today = new Date().toISOString().split("T")[0];
   const [ci, setCi] = useState(today);
   const [co, setCo] = useState(today);
+
+  // Fetch user account data
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUserAccount = async () => {
+      try {
+        const response = await api.get("/accounts/me");
+        setUserAccount(response.data);
+      } catch (error) {
+        console.error("Error fetching user account:", error);
+      }
+    };
+
+    fetchUserAccount();
+  }, [user]);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!user) {
+      setErr("Please log in to view hotel rooms");
+      return;
+    }
+  }, [user]);
+
+  // Fetch hotel details
+  useEffect(() => {
+    if (!user) return; // Don't fetch if not authenticated
+
+    const fetchHotelDetails = async () => {
+      try {
+        const response = await api.get(`/hotels/${hotelId}`);
+        setHotel(response.data);
+      } catch (error) {
+        console.error("Error fetching hotel details:", error);
+        if (error.response?.status === 401) {
+          setErr("Please log in to view hotel details");
+        } else if (error.response?.status === 404) {
+          setErr(
+            "Hotel not found. The hotel you're looking for doesn't exist or has been removed."
+          );
+          // Redirect to hotels list after 3 seconds
+          setTimeout(() => {
+            navigate("/hotels");
+          }, 3000);
+        } else {
+          setErr(error.response?.data?.error || "Error fetching hotel details");
+        }
+      }
+    };
+    fetchHotelDetails();
+  }, [hotelId, user, navigate]);
 
   // Function to update dates and ensure check-out is after check-in
   const updateDates = (newCi, newCo) => {
@@ -38,6 +98,8 @@ export default function HotelRooms() {
 
   // Function to fetch rooms with date parameters
   const fetchRooms = async () => {
+    if (!user) return; // Don't fetch if not authenticated
+
     setLoading(true);
     setErr("");
     try {
@@ -49,7 +111,11 @@ export default function HotelRooms() {
       });
       setRooms(response.data);
     } catch (e) {
-      setErr(e.message);
+      if (e.response?.status === 401) {
+        setErr("Please log in to view available rooms");
+      } else {
+        setErr(e.response?.data?.error || e.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -57,8 +123,10 @@ export default function HotelRooms() {
 
   // Initial load
   useEffect(() => {
-    fetchRooms();
-  }, [hotelId]);
+    if (user) {
+      fetchRooms();
+    }
+  }, [hotelId, user]);
 
   async function book(num) {
     setErr("");
@@ -104,7 +172,8 @@ export default function HotelRooms() {
     const coDate = new Date(co);
     const nights = Math.ceil((coDate - ciDate) / (1000 * 60 * 60 * 24));
     const totalPrice = room.pricePerNight * nights;
-    const canAfford = user?.balance >= totalPrice;
+    const canAfford = userAccount?.balance >= totalPrice;
+    const balanceDifference = userAccount?.balance - totalPrice;
 
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
@@ -145,12 +214,36 @@ export default function HotelRooms() {
               <span className="font-medium">Total for {nights} nights:</span> $
               {totalPrice}
             </p>
-            {!canAfford && (
-              <p className="text-yellow-500 dark:text-yellow-400 text-sm">
-                Warning: Your current balance (${user?.balance || 0}) is
-                insufficient. You'll need to add funds before check-in.
+            <div
+              className={`mt-2 p-2 rounded-md ${
+                canAfford
+                  ? "bg-green-50 dark:bg-green-900/20"
+                  : "bg-yellow-50 dark:bg-yellow-900/20"
+              }`}
+            >
+              <p
+                className={`text-sm ${
+                  canAfford
+                    ? "text-green-700 dark:text-green-300"
+                    : "text-yellow-700 dark:text-yellow-300"
+                }`}
+              >
+                <span className="font-medium">Your balance:</span> $
+                {userAccount?.balance || 0}
+                {!canAfford && (
+                  <span className="block mt-1">
+                    You need ${Math.abs(balanceDifference).toFixed(2)} more to
+                    book this room
+                  </span>
+                )}
+                {canAfford && (
+                  <span className="block mt-1">
+                    You'll have ${balanceDifference.toFixed(2)} remaining after
+                    booking
+                  </span>
+                )}
               </p>
-            )}
+            </div>
           </div>
 
           {room.status === "available" && (
@@ -170,9 +263,88 @@ export default function HotelRooms() {
     );
   };
 
+  const HotelHeader = () => {
+    if (!hotel) return null;
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 mb-8">
+        <div className="space-y-4">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {hotel.name}
+          </h1>
+
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <img
+              src={mapPinIcon}
+              alt="Location"
+              className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+            />
+            <p>{hotel.address}</p>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {[...Array(5)].map((_, index) => (
+              <span
+                key={index}
+                className={`text-xl ${
+                  index < hotel.starRating
+                    ? "text-yellow-400"
+                    : "text-gray-300 dark:text-gray-600"
+                }`}
+              >
+                ★
+              </span>
+            ))}
+            <span className="ml-2 text-gray-600 dark:text-gray-300">
+              ({hotel.starRating} stars)
+            </span>
+          </div>
+
+          <p className="text-gray-700 dark:text-gray-300">
+            {hotel.description}
+          </p>
+
+          <div className="flex flex-wrap gap-4">
+            {hotel.amenities?.includes("wifi") && (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                <img
+                  src={wifiIcon}
+                  alt="WiFi"
+                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+                />
+                <span>Free WiFi</span>
+              </div>
+            )}
+            {hotel.amenities?.includes("restaurant") && (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                <img
+                  src={restaurantIcon}
+                  alt="Restaurant"
+                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+                />
+                <span>Restaurant</span>
+              </div>
+            )}
+            {hotel.amenities?.includes("pool") && (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                <img
+                  src={poolIcon}
+                  alt="Pool"
+                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+                />
+                <span>Swimming Pool</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        <HotelHeader />
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center space-x-2">
             <img

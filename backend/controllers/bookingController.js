@@ -114,3 +114,63 @@ exports.cancelReceptionist = async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 };
+
+exports.createBooking = async (req, res) => {
+  try {
+    const result = await bookingSvc.createBooking(req.body);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.listBookings = async (req, res) => {
+  try {
+    const result = await bookingSvc.listBookings(req.query);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.cancelBooking = async (req, res) => {
+  try {
+    const result = await bookingSvc.cancelBooking(req.body);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.checkInBooking = async (req, res) => {
+  try {
+    const result = await bookingSvc.checkInBooking(req.body);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.checkOutBooking = async (req, res) => {
+  try {
+    const result = await bookingSvc.checkOutBooking(req.body);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

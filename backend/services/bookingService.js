@@ -20,40 +20,57 @@ exports.createBooking = async ({
   cancellationGracePeriod = 24,
   totalAmount,
 }) => {
-  // roomDetails is array of room IDs
-  const ok = await roomService.checkAvailability(hotelId, roomDetails);
-  if (!ok) throw new Error("One or more rooms unavailable");
+  try {
+    // Validate required fields
+    if (!hotelId) return { error: "Hotel ID is required" };
+    if (!customerID) return { error: "Customer ID is required" };
+    if (
+      !roomDetails ||
+      !Array.isArray(roomDetails) ||
+      roomDetails.length === 0
+    ) {
+      return { error: "Room details are required" };
+    }
+    if (!checkInDate) return { error: "Check-in date is required" };
+    if (!checkOutDate) return { error: "Check-out date is required" };
+    if (!totalAmount) return { error: "Total amount is required" };
 
-  // mark rooms booked
-  await Promise.all(
-    roomDetails.map((rid) => roomService.updateRoomStatus(rid, "booked"))
-  );
+    const ok = await roomService.checkAvailability(hotelId, roomDetails);
+    if (!ok) return { error: "One or more rooms unavailable" };
 
-  const payload = {
-    hotelID: hotelId,
-    customerID,
-    roomDetails,
-    checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
-    checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
-    cancellationGracePeriod,
-    totalAmount,
-    status: "booked",
-    createdAt: admin.firestore.Timestamp.now(),
-  };
-  const ref = await bookingsCol.add(payload);
-  const d = await ref.get();
-  return new Booking({
-    bookingID: d.id,
-    hotelID: hotelId,
-    customerID,
-    roomDetails,
-    checkInDate: new Date(checkInDate),
-    checkOutDate: new Date(checkOutDate),
-    cancellationGracePeriod,
-    totalAmount,
-    status: "booked",
-    createdAt: d.data().createdAt.toDate(),
-  });
+    // mark rooms booked
+    await Promise.all(
+      roomDetails.map((rid) => roomService.updateRoomStatus(rid, "booked"))
+    );
+
+    const payload = {
+      hotelID: hotelId,
+      customerID,
+      roomDetails,
+      checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
+      checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
+      cancellationGracePeriod,
+      totalAmount,
+      status: "booked",
+      createdAt: admin.firestore.Timestamp.now(),
+    };
+    const ref = await bookingsCol.add(payload);
+    const d = await ref.get();
+    return new Booking({
+      bookingID: d.id,
+      hotelID: hotelId,
+      customerID,
+      roomDetails,
+      checkInDate: new Date(checkInDate),
+      checkOutDate: new Date(checkOutDate),
+      cancellationGracePeriod,
+      totalAmount,
+      status: "booked",
+      createdAt: d.data().createdAt.toDate(),
+    });
+  } catch (e) {
+    return { error: e.message };
+  }
 };
 
 exports.listUserBookings = async (hotelId, customerID) => {
@@ -162,113 +179,118 @@ exports.listHotelBookings = async (hotelId) => {
 };
 
 exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
-  const doc = await bookingsCol.doc(bookingID).get();
-  if (!doc.exists) throw new Error("Booking not found");
-  const data = doc.data();
-  if (data.hotelID !== hotelId) throw new Error("Wrong hotel");
-  if (data.status !== "booked") throw new Error("Cannot cancel");
+  try {
+    if (!hotelId) return { error: "Hotel ID is required" };
+    if (!bookingID) return { error: "Booking ID is required" };
+    if (!canceledBy) return { error: "Canceled by is required" };
 
-  const createdAt = data.createdAt.toDate();
-  const now = new Date();
-  const hours = (now - createdAt) / 36e5;
-  const penalty =
-    hours > data.cancellationGracePeriod ? data.totalAmount * 0.5 : 0;
+    const doc = await bookingsCol.doc(bookingID).get();
+    if (!doc.exists) return { error: "Booking not found" };
+    const data = doc.data();
+    if (data.hotelID !== hotelId) return { error: "Wrong hotel" };
+    if (data.status !== "booked") return { error: "Cannot cancel" };
 
-  await bookingsCol.doc(bookingID).update({ status: "canceled" });
-  // free rooms
-  await Promise.all(
-    data.roomDetails.map((rid) =>
-      roomService.updateRoomStatus(rid, "available")
-    )
-  );
-  // log cancellation
-  const payload = {
-    hotelID: hotelId,
-    bookingID,
-    canceledBy,
-    cancellationTime: admin.firestore.Timestamp.fromDate(now),
-    penaltyApplied: penalty,
-  };
-  const cref = await cancelsCol.add(payload);
-  const cd = await cref.get();
-  return new CancellationRecord({
-    cancellationID: cd.id,
-    bookingID,
-    cancellationTime: cd.data().cancellationTime.toDate(),
-    penaltyApplied: cd.data().penaltyApplied,
-  });
+    const createdAt = data.createdAt.toDate();
+    const now = new Date();
+    const hours = (now - createdAt) / 36e5;
+    const penalty =
+      hours > data.cancellationGracePeriod ? data.totalAmount * 0.5 : 0;
+
+    await bookingsCol.doc(bookingID).update({ status: "canceled" });
+    // free rooms
+    await Promise.all(
+      data.roomDetails.map((rid) =>
+        roomService.updateRoomStatus(rid, "available")
+      )
+    );
+    // log cancellation
+    const payload = {
+      hotelID: hotelId,
+      bookingID,
+      canceledBy,
+      cancellationTime: admin.firestore.Timestamp.fromDate(now),
+      penaltyApplied: penalty,
+    };
+    const cref = await cancelsCol.add(payload);
+    const cd = await cref.get();
+    return new CancellationRecord({
+      cancellationID: cd.id,
+      bookingID,
+      cancellationTime: cd.data().cancellationTime.toDate(),
+      penaltyApplied: cd.data().penaltyApplied,
+    });
+  } catch (e) {
+    return { error: e.message };
+  }
 };
 
 exports.checkInBooking = async ({ hotelId, bookingID }) => {
-  const doc = await bookingsCol.doc(bookingID).get();
-  if (!doc.exists) throw new Error("Booking not found");
-  const data = doc.data();
-  if (data.hotelID !== hotelId) throw new Error("Wrong hotel");
-  if (data.status !== "booked") throw new Error("Cannot check in");
+  try {
+    if (!hotelId) return { error: "Hotel ID is required" };
+    if (!bookingID) return { error: "Booking ID is required" };
 
-  await bookingsCol.doc(bookingID).update({ status: "occupied" });
-  await Promise.all(
-    data.roomDetails.map((rid) => roomService.updateRoomStatus(rid, "occupied"))
-  );
-  return { bookingID };
+    const doc = await bookingsCol.doc(bookingID).get();
+    if (!doc.exists) return { error: "Booking not found" };
+    const data = doc.data();
+    if (data.hotelID !== hotelId) return { error: "Wrong hotel" };
+    if (data.status !== "booked") return { error: "Cannot check in" };
+
+    await bookingsCol.doc(bookingID).update({ status: "occupied" });
+    await Promise.all(
+      data.roomDetails.map((rid) =>
+        roomService.updateRoomStatus(rid, "occupied")
+      )
+    );
+    return { bookingID };
+  } catch (e) {
+    return { error: e.message };
+  }
 };
 
 exports.checkOutBooking = async ({ hotelId, bookingID }) => {
-  const doc = await bookingsCol.doc(bookingID).get();
-  if (!doc.exists) throw new Error("Booking not found");
-  const data = doc.data();
-  if (data.hotelID !== hotelId) throw new Error("Wrong hotel");
-  if (data.status !== "occupied") throw new Error("Cannot check out");
+  try {
+    if (!hotelId) return { error: "Hotel ID is required" };
+    if (!bookingID) return { error: "Booking ID is required" };
 
-  const now = new Date();
-  await bookingsCol.doc(bookingID).update({
-    status: "completed",
-    checkedOutAt: admin.firestore.Timestamp.fromDate(now),
-  });
-  // free rooms
-  await Promise.all(
-    data.roomDetails.map((rid) =>
-      roomService.updateRoomStatus(rid, "available")
-    )
-  );
-  // record payment
-  const payPayload = {
-    hotelID: hotelId,
-    bookingID,
-    amount: data.totalAmount,
-    paymentMethod: "card",
-    transactionDate: admin.firestore.Timestamp.fromDate(now),
-    status: "approved",
-  };
-  const pRef = await paymentsCol.add(payPayload);
-  const pDoc = await pRef.get();
-  const payment = new PaymentTransaction({
-    transactionID: pDoc.id,
-    bookingID,
-    amount: pDoc.data().amount,
-    paymentMethod: pDoc.data().paymentMethod,
-    transactionDate: pDoc.data().transactionDate.toDate(),
-    status: pDoc.data().status,
-  });
-  // generate invoice
-  const invPayload = {
-    hotelID: hotelId,
-    bookingID,
-    itemizedCharges: [`Room + services: ${data.totalAmount}`],
-    totalAmount: data.totalAmount,
-    issueDate: admin.firestore.Timestamp.fromDate(now),
-  };
-  const iRef = await invoicesCol.add(invPayload);
-  const iDoc = await iRef.get();
-  const invoice = new Invoice({
-    invoiceID: iDoc.id,
-    bookingID,
-    itemizedCharges: iDoc.data().itemizedCharges,
-    totalAmount: iDoc.data().totalAmount,
-    issueDate: iDoc.data().issueDate.toDate(),
-  });
+    const doc = await bookingsCol.doc(bookingID).get();
+    if (!doc.exists) return { error: "Booking not found" };
+    const data = doc.data();
+    if (data.hotelID !== hotelId) return { error: "Wrong hotel" };
+    if (data.status !== "occupied") return { error: "Cannot check out" };
 
-  return { payment, invoice };
+    const now = new Date();
+    await bookingsCol.doc(bookingID).update({
+      status: "completed",
+      checkedOutAt: admin.firestore.Timestamp.fromDate(now),
+    });
+    // free rooms
+    await Promise.all(
+      data.roomDetails.map((rid) =>
+        roomService.updateRoomStatus(rid, "available")
+      )
+    );
+    // record payment
+    const payPayload = {
+      hotelID: hotelId,
+      bookingID,
+      amount: data.totalAmount,
+      paymentMethod: "card",
+      transactionDate: admin.firestore.Timestamp.fromDate(now),
+      status: "approved",
+    };
+    const pRef = await paymentsCol.add(payPayload);
+    const pDoc = await pRef.get();
+    return new PaymentTransaction({
+      transactionID: pDoc.id,
+      bookingID,
+      amount: pDoc.data().amount,
+      paymentMethod: pDoc.data().paymentMethod,
+      transactionDate: pDoc.data().transactionDate.toDate(),
+      status: pDoc.data().status,
+    });
+  } catch (e) {
+    return { error: e.message };
+  }
 };
 
 exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {

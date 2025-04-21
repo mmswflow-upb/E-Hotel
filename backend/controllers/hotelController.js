@@ -21,6 +21,19 @@ exports.listAssigned = async (req, res) => {
   res.json(hotels);
 };
 
+exports.getHotelById = async (req, res) => {
+  try {
+    const hotel = await hotelSvc.getHotelById(req.params.hotelId);
+    if (!hotel) {
+      return res.status(404).json({ error: "Hotel not found" });
+    }
+    res.json(hotel);
+  } catch (error) {
+    console.error("Error fetching hotel:", error);
+    res.status(500).json({ error: "Error fetching hotel details" });
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     const h = await hotelSvc.createHotel(req.body);

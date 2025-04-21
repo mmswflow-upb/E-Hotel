@@ -23,7 +23,7 @@ router.get(
       case "HotelManager":
         return bookingCtrl.listAll(req, res, next);
       default:
-        return res.status(403).json({ message: "Unauthorized role" });
+        return res.status(403).json({ error: "Unauthorized role" });
     }
   }
 );
@@ -41,7 +41,7 @@ router.get(
       case "HotelManager":
         return bookingCtrl.getById(req, res, next);
       default:
-        return res.status(403).json({ message: "Unauthorized role" });
+        return res.status(403).json({ error: "Unauthorized role" });
     }
   }
 );
@@ -55,7 +55,7 @@ router.post("/", role("Customer", "Receptionist"), (req, res, next) => {
     case "Receptionist":
       return bookingCtrl.createReceptionist(req, res, next);
     default:
-      return res.status(403).json({ message: "Unauthorized role" });
+      return res.status(403).json({ error: "Unauthorized role" });
   }
 });
 
@@ -71,9 +71,23 @@ router.post(
       case "Receptionist":
         return bookingCtrl.cancelReceptionist(req, res, next);
       default:
-        return res.status(403).json({ message: "Unauthorized role" });
+        return res.status(403).json({ error: "Unauthorized role" });
     }
   }
+);
+
+// Check-in route (only for receptionists)
+router.post(
+  "/:bookingId/checkin",
+  role("Receptionist"),
+  bookingCtrl.checkInBooking
+);
+
+// Check-out route (only for receptionists)
+router.post(
+  "/:bookingId/checkout",
+  role("Receptionist"),
+  bookingCtrl.checkOutBooking
 );
 
 module.exports = router;

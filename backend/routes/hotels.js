@@ -31,6 +31,9 @@ router.get("/", (req, res, next) => {
   }
 });
 
+// Get single hotel by ID
+router.get("/:hotelId", hotelCtrl.getHotelById);
+
 // Create hotel - SystemAdmin only
 router.post("/", role("SystemAdmin"), hotelCtrl.create);
 
