@@ -1,12 +1,13 @@
 // services/roomService.js
 const { db } = require("../firebase");
 const Room = require("../models/Room");
+const bookingService = require("./bookingService");
 
 const roomsCol = db.collection("rooms");
 
-exports.listRooms = async (hotelId) => {
+exports.listRooms = async (hotelId, { checkInDate, checkOutDate } = {}) => {
   const snap = await roomsCol.where("hotelID", "==", hotelId).get();
-  return snap.docs.map(
+  const rooms = snap.docs.map(
     (d) =>
       new Room({
         ...d.data(),
@@ -16,6 +17,44 @@ exports.listRooms = async (hotelId) => {
         hotelID: hotelId,
       })
   );
+
+  // If dates are provided, check availability
+  if (checkInDate && checkOutDate) {
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+
+    // Get all bookings for this hotel
+    const bookings = await bookingService.listBookings({ hotelId });
+
+    // Filter out rooms that are booked during the requested period
+    const availableRooms = rooms.filter((room) => {
+      const isBooked = bookings.some((booking) => {
+        const bookingCheckIn = new Date(booking.checkInDate);
+        const bookingCheckOut = new Date(booking.checkOutDate);
+
+        // Check if the room is in this booking
+        const isRoomInBooking = booking.roomDetails.some(
+          (roomDetail) => roomDetail.roomNumber === room.roomNumber
+        );
+
+        // Check if the booking overlaps with the requested period
+        const isOverlapping =
+          (checkIn >= bookingCheckIn && checkIn < bookingCheckOut) ||
+          (checkOut > bookingCheckIn && checkOut <= bookingCheckOut) ||
+          (checkIn <= bookingCheckIn && checkOut >= bookingCheckOut);
+
+        return (
+          isRoomInBooking && isOverlapping && booking.status !== "canceled"
+        );
+      });
+
+      return !isBooked;
+    });
+
+    return availableRooms;
+  }
+
+  return rooms;
 };
 
 exports.createRoom = async ({ hotelId, roomNumber, type }) => {

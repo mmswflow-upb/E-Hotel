@@ -10,14 +10,12 @@ const statsR = require("./stats");
 
 const router = express.Router();
 
-// Public routes - anyone can view hotels and rooms
-router.get("/", (req, res, next) => {
-  const userRole = req.user?.role;
+// Apply auth middleware to all routes
+router.use(auth);
 
-  if (!userRole || userRole === "Customer") {
-    // Customers and unauthenticated users can see all hotels
-    return hotelCtrl.listAll(req, res, next);
-  }
+// List hotels with role-based access
+router.get("/", (req, res, next) => {
+  const userRole = req.user.role;
 
   switch (userRole) {
     case "SystemAdmin":
@@ -26,13 +24,12 @@ router.get("/", (req, res, next) => {
       return hotelCtrl.listManaged(req, res, next);
     case "Receptionist":
       return hotelCtrl.listAssigned(req, res, next);
-    default:
+    case "Customer":
       return hotelCtrl.listAll(req, res, next);
+    default:
+      return res.status(401).json({ error: "Unauthorized" });
   }
 });
-
-// Protected routes
-router.use(auth);
 
 // Create hotel - SystemAdmin only
 router.post("/", role("SystemAdmin"), hotelCtrl.create);

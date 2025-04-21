@@ -2,8 +2,16 @@
 const roomSvc = require("../services/roomService");
 
 exports.list = async (req, res) => {
-  const rooms = await roomSvc.listRooms(req.params.hotelId);
-  res.json(rooms);
+  try {
+    const { checkInDate, checkOutDate } = req.query;
+    const rooms = await roomSvc.listRooms(req.params.hotelId, {
+      checkInDate,
+      checkOutDate,
+    });
+    res.json(rooms);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 };
 
 exports.create = async (req, res) => {

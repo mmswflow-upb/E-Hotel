@@ -7,17 +7,35 @@ export default function HotelRooms() {
   const [rooms, setRooms] = useState([]);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // date state
   const today = new Date().toISOString().split("T")[0];
   const [ci, setCi] = useState(today);
   const [co, setCo] = useState(today);
 
+  // Function to fetch rooms with date parameters
+  const fetchRooms = async () => {
+    setLoading(true);
+    setErr("");
+    try {
+      const response = await api.get(`/hotels/${hotelId}/rooms`, {
+        params: {
+          checkInDate: ci,
+          checkOutDate: co,
+        },
+      });
+      setRooms(response.data);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    api
-      .get(`/hotels/${hotelId}/rooms`)
-      .then((r) => setRooms(r.data))
-      .catch((e) => setErr(e.message));
+    fetchRooms();
   }, [hotelId]);
 
   async function book(num) {
@@ -45,8 +63,7 @@ export default function HotelRooms() {
         totalAmount,
       });
       setMsg("Booked!");
-      const r = await api.get(`/hotels/${hotelId}/rooms`);
-      setRooms(r.data);
+      fetchRooms(); // Refresh room list after booking
     } catch (e) {
       setErr(e.message);
     }
@@ -73,6 +90,13 @@ export default function HotelRooms() {
             onChange={(e) => setCo(e.target.value)}
           />
         </label>
+        <button
+          onClick={fetchRooms}
+          disabled={loading}
+          className="refresh-button"
+        >
+          {loading ? "Loading..." : "Update Availability"}
+        </button>
       </div>
 
       {err && <p className="err">{err}</p>}
