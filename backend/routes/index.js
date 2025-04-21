@@ -9,6 +9,7 @@ const accountRoutes = require("./accountRoutes");
 const roomRoutes = require("./roomRoutes");
 const statRoutes = require("./statRoutes");
 const checkRoutes = require("./checkRoutes");
+const invoiceRoutes = require("./invoiceRoutes");
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use("/accounts", accountRoutes);
 router.use("/rooms", roomRoutes);
 router.use("/stats", statRoutes);
 router.use("/check", checkRoutes);
+router.use("/invoices", invoiceRoutes);
 
 module.exports = router;

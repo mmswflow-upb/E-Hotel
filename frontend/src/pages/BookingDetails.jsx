@@ -21,7 +21,7 @@ export default function BookingDetail() {
         setBooking(res.data);
         if (res.data.hasInvoice) {
           try {
-            const iv = await api.get(`/bookings/${bookingId}/invoice`);
+            const iv = await api.get(`/invoices/booking/${bookingId}`);
             setInvoice(iv.data);
           } catch {}
         }

@@ -1,10 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const InvoiceController = require("../controllers/invoiceController");
-const { authenticateToken, authorizeRole } = require("../middleware/auth");
+const auth = require("../middleware/auth");
+const role = require("../middleware/role");
+
+// Apply auth middleware to all routes
+router.use(auth);
 
 // Get invoice by ID
-router.get("/:invoiceID", authenticateToken, async (req, res) => {
+router.get("/:invoiceID", async (req, res) => {
   try {
     const invoice = await InvoiceController.getInvoiceById(
       req.params.invoiceID
@@ -16,7 +20,7 @@ router.get("/:invoiceID", authenticateToken, async (req, res) => {
 });
 
 // Get invoices by booking
-router.get("/booking/:bookingID", authenticateToken, async (req, res) => {
+router.get("/booking/:bookingID", async (req, res) => {
   try {
     const invoices = await InvoiceController.getInvoicesByBooking(
       req.params.bookingID
@@ -30,8 +34,7 @@ router.get("/booking/:bookingID", authenticateToken, async (req, res) => {
 // Get invoices by hotel (hotel staff only)
 router.get(
   "/hotel/:hotelID",
-  authenticateToken,
-  authorizeRole(["HotelManager", "Receptionist"]),
+  role(["HotelManager", "Receptionist"]),
   async (req, res) => {
     try {
       const invoices = await InvoiceController.getInvoicesByHotel(
@@ -45,25 +48,19 @@ router.get(
 );
 
 // Create new invoice (hotel staff only)
-router.post(
-  "/",
-  authenticateToken,
-  authorizeRole(["HotelManager", "Receptionist"]),
-  async (req, res) => {
-    try {
-      const invoice = await InvoiceController.createInvoice(req.body);
-      res.status(201).json(invoice);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+router.post("/", role(["HotelManager", "Receptionist"]), async (req, res) => {
+  try {
+    const invoice = await InvoiceController.createInvoice(req.body);
+    res.status(201).json(invoice);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
+});
 
 // Update invoice (hotel staff only)
 router.put(
   "/:invoiceID",
-  authenticateToken,
-  authorizeRole(["HotelManager", "Receptionist"]),
+  role(["HotelManager", "Receptionist"]),
   async (req, res) => {
     try {
       const invoice = await InvoiceController.updateInvoice(
@@ -80,8 +77,7 @@ router.put(
 // Add service to invoice (hotel staff only)
 router.post(
   "/:invoiceID/services",
-  authenticateToken,
-  authorizeRole(["HotelManager", "Receptionist"]),
+  role(["HotelManager", "Receptionist"]),
   async (req, res) => {
     try {
       const invoice = await InvoiceController.addServiceToInvoice(
@@ -98,8 +94,7 @@ router.post(
 // Update invoice status (hotel staff only)
 router.put(
   "/:invoiceID/status",
-  authenticateToken,
-  authorizeRole(["HotelManager", "Receptionist"]),
+  role(["HotelManager", "Receptionist"]),
   async (req, res) => {
     try {
       const invoice = await InvoiceController.updateInvoiceStatus(
