@@ -39,14 +39,9 @@ export default function Register() {
       // Create customer account with required fields
       await api.put("/accounts/me", {
         name: formData.name,
-        contactInfo: {
-          email: formData.email,
-          phone: formData.phone,
-        },
-        identification: {
-          type: formData.idType,
-          number: formData.idNumber,
-        },
+        phoneNumber: formData.phone,
+        idType: formData.idType,
+        idNumber: formData.idNumber,
         balance: 0,
       });
 
