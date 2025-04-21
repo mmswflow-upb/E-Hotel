@@ -10,6 +10,30 @@
   ::selection {
     @apply bg-primary/30 text-white;
   }
+
+  input, button, select {
+    @apply w-full my-1 px-4 py-2 border-0 rounded font-sans bg-white text-gray-900;
+  }
+
+  input::placeholder {
+    @apply text-gray-500;
+  }
+
+  select {
+    @apply bg-white text-gray-900 cursor-pointer;
+  }
+
+  button {
+    @apply bg-primary text-white cursor-pointer hover:opacity-90 transition-opacity;
+  }
+
+  table {
+    @apply w-full border-collapse mt-4;
+  }
+
+  td, th {
+    @apply border border-gray-600 p-2 text-left;
+  }
 }
 
 @layer components {
@@ -93,22 +117,6 @@
     @apply bg-error text-white;
   }
 
-  input, button, select {
-    @apply w-full my-1 px-4 py-2 border-0 rounded font-sans bg-white text-gray-900;
-  }
-
-  input::placeholder {
-    @apply text-gray-500;
-  }
-
-  select {
-    @apply bg-white text-gray-900 cursor-pointer;
-  }
-
-  button {
-    @apply bg-primary text-white cursor-pointer hover:opacity-90 transition-opacity;
-  }
-
   .cancel-button {
     @apply bg-danger hover:opacity-90;
   }
@@ -119,14 +127,6 @@
 
   .ok {
     @apply text-success;
-  }
-
-  table {
-    @apply w-full border-collapse mt-4;
-  }
-
-  td, th {
-    @apply border border-gray-600 p-2 text-left;
   }
 
   .dates {
