@@ -13,15 +13,25 @@ export function AuthProvider({ children }) {
   useEffect(
     () =>
       onIdTokenChanged(auth, async (u) => {
+        console.log("Auth state changed:", u);
         if (!u) {
+          console.log("No user found, setting state to null");
           setUser(null);
           setRole(null);
           setLd(false);
           return;
         }
-        const claims = (await u.getIdTokenResult()).claims;
-        setUser(u);
-        setRole(claims.role || "Customer");
+        try {
+          const tokenResult = await u.getIdTokenResult();
+          console.log("Token result:", tokenResult);
+          const claims = tokenResult.claims;
+          console.log("Claims:", claims);
+          setUser(u);
+          setRole(claims.role || "Tourist");
+          console.log("Set role to:", claims.role || "Tourist");
+        } catch (error) {
+          console.error("Error getting token result:", error);
+        }
         setLd(false);
       }),
     []

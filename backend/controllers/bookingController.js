@@ -56,3 +56,19 @@ exports.cancel = async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 };
+
+exports.getById = async (req, res) => {
+  try {
+    const booking = await bookingSvc.getBookingById({
+      bookingID: req.params.bookingId,
+      userId: req.user.uid,
+      userRole: req.user.role,
+    });
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    res.json(booking);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+};

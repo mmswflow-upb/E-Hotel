@@ -270,3 +270,71 @@ exports.checkOutBooking = async ({ hotelId, bookingID }) => {
 
   return { payment, invoice };
 };
+
+exports.getBookingById = async ({ bookingID, userId, userRole }) => {
+  const doc = await bookingsCol.doc(bookingID).get();
+  if (!doc.exists) return null;
+
+  const data = doc.data();
+
+  // Check if the user has permission to view this booking
+  if (
+    userRole !== "HotelManager" &&
+    userRole !== "Receptionist" &&
+    data.customerID !== userId
+  ) {
+    return null;
+  }
+
+  // Get hotel details
+  const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
+  const hotelData = hotelDoc.data();
+
+  // Get room details
+  const roomPromises = data.roomDetails.map((roomId) =>
+    db.collection("rooms").doc(roomId).get()
+  );
+  const roomDocs = await Promise.all(roomPromises);
+  const roomDetails = roomDocs.map((roomDoc) => ({
+    roomNumber: roomDoc.data().roomNumber,
+    type: roomDoc.data().type,
+    status: roomDoc.data().status,
+  }));
+
+  // Get payment status
+  const paymentSnap = await db
+    .collection("paymentTransactions")
+    .where("bookingID", "==", bookingID)
+    .get();
+  const paymentStatus = paymentSnap.empty
+    ? "pending"
+    : paymentSnap.docs[0].data().status;
+
+  // Get invoice status
+  const invoiceSnap = await db
+    .collection("invoices")
+    .where("bookingID", "==", bookingID)
+    .get();
+  const hasInvoice = !invoiceSnap.empty;
+
+  return new Booking({
+    bookingID,
+    hotelID: data.hotelID,
+    hotelDetails: {
+      name: hotelData.name,
+      address: hotelData.address,
+      starRating: hotelData.starRating,
+    },
+    customerID: data.customerID,
+    roomDetails,
+    checkInDate: data.checkInDate.toDate(),
+    checkOutDate: data.checkOutDate.toDate(),
+    checkedOutAt: data.checkedOutAt?.toDate(),
+    cancellationGracePeriod: data.cancellationGracePeriod,
+    totalAmount: data.totalAmount,
+    status: data.status,
+    paymentStatus,
+    hasInvoice,
+    createdAt: data.createdAt.toDate(),
+  });
+};

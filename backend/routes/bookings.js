@@ -13,6 +13,11 @@ router.get("/mine", role("Tourist", "Customer"), bkgCtrl.listAllMine);
 // Hotel-specific routes (requires hotelId)
 router.post("/", role("Tourist", "Customer", "Receptionist"), bkgCtrl.create);
 router.get("/", role("Receptionist", "HotelManager"), bkgCtrl.listAll);
+router.get(
+  "/:bookingId",
+  role("Tourist", "Customer", "Receptionist", "HotelManager"),
+  bkgCtrl.getById
+);
 router.post(
   "/:bookingId/cancel",
   role("Tourist", "Customer", "Receptionist"),
