@@ -14,9 +14,9 @@ const router = express.Router();
 router.get("/", (req, res, next) => {
   const userRole = req.user?.role;
 
-  if (!userRole) {
-    // Public access - return basic hotel info
-    return hotelCtrl.listPublic(req, res, next);
+  if (!userRole || userRole === "Customer") {
+    // Customers and unauthenticated users can see all hotels
+    return hotelCtrl.listAll(req, res, next);
   }
 
   switch (userRole) {
@@ -26,10 +26,8 @@ router.get("/", (req, res, next) => {
       return hotelCtrl.listManaged(req, res, next);
     case "Receptionist":
       return hotelCtrl.listAssigned(req, res, next);
-    case "Customer":
-      return hotelCtrl.listPublic(req, res, next);
     default:
-      return hotelCtrl.listPublic(req, res, next);
+      return hotelCtrl.listAll(req, res, next);
   }
 });
 

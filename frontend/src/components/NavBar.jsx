@@ -12,24 +12,68 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="nav">
-      <Link to="/hotels">Hotels</Link>
+    <nav className="flex items-center gap-4 p-4 bg-secondary">
+      <Link
+        to="/hotels"
+        className="text-white hover:text-primary transition-colors duration-200"
+      >
+        Hotels
+      </Link>
       {user ? (
         <>
-          {role === "Customer" && <Link to="/profile">Profile</Link>}
-          {role === "Customer" && <Link to="/my-bookings">My bookings</Link>}
+          {role === "Customer" && (
+            <Link
+              to="/profile"
+              className="text-white hover:text-primary transition-colors duration-200"
+            >
+              Profile
+            </Link>
+          )}
+          {role === "Customer" && (
+            <Link
+              to="/my-bookings"
+              className="text-white hover:text-primary transition-colors duration-200"
+            >
+              My bookings
+            </Link>
+          )}
           {["Receptionist", "SystemAdmin"].includes(role) && (
-            <Link to="/reception">Reception</Link>
+            <Link
+              to="/reception"
+              className="text-white hover:text-primary transition-colors duration-200"
+            >
+              Reception
+            </Link>
           )}
           {["HotelManager", "SystemAdmin"].includes(role) && (
-            <Link to="/stats">Stats</Link>
+            <Link
+              to="/stats"
+              className="text-white hover:text-primary transition-colors duration-200"
+            >
+              Stats
+            </Link>
           )}
-          <button onClick={logout}>Logout</button>
+          <button
+            onClick={logout}
+            className="text-white hover:text-primary transition-colors duration-200 bg-transparent border-none cursor-pointer"
+          >
+            Logout
+          </button>
         </>
       ) : (
         <>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
+          <Link
+            to="/login"
+            className="text-white hover:text-primary transition-colors duration-200"
+          >
+            Login
+          </Link>
+          <Link
+            to="/register"
+            className="text-white hover:text-primary transition-colors duration-200"
+          >
+            Register
+          </Link>
         </>
       )}
     </nav>

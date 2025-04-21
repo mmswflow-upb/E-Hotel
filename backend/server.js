@@ -1,42 +1,28 @@
 // server.js
-const seed = require("./dataLoader");
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const api = require("./routes");
+require("./firebase");
 
-(async () => {
-  try {
-    console.log("🔄 Seeding data…");
-    await seed();
-    console.log("✅ Data seeded—starting server");
-  } catch (err) {
-    console.error("❌ DataLoader failed:", err);
-    process.exit(1);
-  }
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
-  // now start Express
-  const express = require("express");
-  const bodyParser = require("body-parser");
-  const cors = require("cors");
-  const api = require("./routes");
-  require("./firebase");
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
-  const app = express();
-  app.use(cors());
-  app.use(bodyParser.json());
+// Mount API routes
+app.use("/api", api);
 
-  // Log all requests
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    next();
-  });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something broke!" });
+});
 
-  // Mount API routes
-  app.use("/api", api);
-
-  // Error handling middleware
-  app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: "Something broke!" });
-  });
-
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`🚀 Listening on port ${PORT}`));
-})();
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Listening on port ${PORT}`));
