@@ -28,7 +28,8 @@ exports.listMine = async (req, res) => {
 
 exports.listAllMine = async (req, res) => {
   const bookings = await bookingSvc.listBookings({ customerID: req.user.uid });
-  res.json(bookings);
+  const categorizedBookings = bookingSvc.categorizeBookings(bookings);
+  res.json(categorizedBookings);
 };
 
 exports.listAll = async (req, res) => {

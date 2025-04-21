@@ -414,3 +414,27 @@ exports.getBookingById = async (bookingId, { customerId, staffId } = {}) => {
     createdAt: data.createdAt.toDate(),
   });
 };
+
+exports.categorizeBookings = (bookings) => {
+  const now = new Date();
+  return bookings.reduce(
+    (acc, booking) => {
+      const checkInDate = new Date(booking.checkInDate);
+      const checkOutDate = new Date(booking.checkOutDate);
+
+      // If booking is cancelled, always put it in history
+      if (booking.status === "canceled") {
+        acc.history.push(booking);
+      } else if (checkOutDate < now) {
+        acc.history.push(booking);
+      } else if (checkInDate <= now && now <= checkOutDate) {
+        acc.active.push(booking);
+      } else {
+        acc.future.push(booking);
+      }
+
+      return acc;
+    },
+    { history: [], active: [], future: [] }
+  );
+};
