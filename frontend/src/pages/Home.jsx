@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import hotelIcon from "../assets/hotel.png";
+import myBookingsIcon from "../assets/myBookings.png";
+import profileIcon from "../assets/profile.png";
 
 export default function Home() {
   const { user, role } = useAuth();
@@ -8,19 +10,6 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="flex flex-col items-center">
-          <div className="flex items-center space-x-2">
-            <img
-              src={hotelIcon}
-              alt="E-Hotels Logo"
-              className="h-8 w-8 dark:invert dark:brightness-0 dark:opacity-80"
-            />
-            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-              E‑Hotel
-            </h1>
-          </div>
-        </div>
-
         {!user ? (
           <div className="mt-8 space-y-4 text-center">
             <p className="text-gray-600 dark:text-gray-300">
@@ -43,39 +32,87 @@ export default function Home() {
           </div>
         ) : (
           <div className="mt-8 space-y-6">
-            <p className="text-center text-gray-600 dark:text-gray-300">
+            <p className="text-center text-2xl font-semibold text-gray-900 dark:text-white">
               Welcome back, {user.displayName || user.email?.split("@")[0]}!
             </p>
             <div className="grid grid-cols-1 gap-4">
-              <Link
-                to="/hotels"
-                className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-              >
-                Browse hotels
-              </Link>
-              {role === "Customer" && (
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Discover and book rooms at our premium hotels
+                </p>
                 <Link
-                  to="/my-bookings"
+                  to="/hotels"
                   className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
                 >
-                  My bookings
+                  <img
+                    src={hotelIcon}
+                    alt="Hotels"
+                    className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                  />
+                  Browse hotels
                 </Link>
+              </div>
+              {role === "Customer" && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    View and manage your upcoming and past bookings
+                  </p>
+                  <Link
+                    to="/my-bookings"
+                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    <img
+                      src={myBookingsIcon}
+                      alt="My Bookings"
+                      className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    My bookings
+                  </Link>
+                </div>
+              )}
+              {user && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Update your personal information and preferences
+                  </p>
+                  <Link
+                    to="/profile"
+                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    <img
+                      src={profileIcon}
+                      alt="Profile"
+                      className="h-6 w-6 mr-2 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    Profile
+                  </Link>
+                </div>
               )}
               {["Receptionist", "SystemAdmin"].includes(role) && (
-                <Link
-                  to="/reception"
-                  className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                >
-                  Reception dashboard
-                </Link>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Manage hotel check-ins, check-outs, and guest services
+                  </p>
+                  <Link
+                    to="/reception"
+                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    Reception dashboard
+                  </Link>
+                </div>
               )}
               {["HotelManager", "SystemAdmin"].includes(role) && (
-                <Link
-                  to="/stats"
-                  className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-                >
-                  Monthly stats
-                </Link>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    View hotel performance metrics and analytics
+                  </p>
+                  <Link
+                    to="/stats"
+                    className="flex items-center justify-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    Monthly stats
+                  </Link>
+                </div>
               )}
             </div>
           </div>

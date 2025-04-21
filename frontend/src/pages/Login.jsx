@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import loginIcon from "../assets/log-in.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
+  const navigate = useNavigate();
+
   async function submit(e) {
     e.preventDefault();
     setErr("");
     try {
       await signInWithEmailAndPassword(auth, email, pw);
+      navigate("/");
     } catch (e) {
       setErr(e.message);
     }

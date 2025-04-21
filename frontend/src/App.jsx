@@ -5,6 +5,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
 import NavBar from "./components/NavBar";
+import Footer from "./components/Footer";
 import Protected from "./components/Protected";
 
 // pages
@@ -26,72 +27,76 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <NavBar />
+          <div className="min-h-screen flex flex-col">
+            <NavBar />
+            <main className="flex-grow">
+              <Routes>
+                {/* public */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/hotels" element={<Hotels />} />
+                <Route path="/hotels/:hotelId" element={<HotelRooms />} />
 
-          <Routes>
-            {/* public */}
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/hotels" element={<Hotels />} />
-            <Route path="/hotels/:hotelId" element={<HotelRooms />} />
+                {/* protected */}
+                <Route
+                  path="/profile"
+                  element={
+                    <Protected>
+                      <Profile />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/my-bookings"
+                  element={
+                    <Protected>
+                      <MyBookings />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/bookings/:bookingId"
+                  element={
+                    <Protected>
+                      <BookingDet />
+                    </Protected>
+                  }
+                />
+                <Route
+                  path="/bookings/:bookingId/invoice"
+                  element={
+                    <Protected>
+                      <Invoice />
+                    </Protected>
+                  }
+                />
 
-            {/* protected */}
-            <Route
-              path="/profile"
-              element={
-                <Protected>
-                  <Profile />
-                </Protected>
-              }
-            />
-            <Route
-              path="/my-bookings"
-              element={
-                <Protected>
-                  <MyBookings />
-                </Protected>
-              }
-            />
-            <Route
-              path="/bookings/:bookingId"
-              element={
-                <Protected>
-                  <BookingDet />
-                </Protected>
-              }
-            />
-            <Route
-              path="/bookings/:bookingId/invoice"
-              element={
-                <Protected>
-                  <Invoice />
-                </Protected>
-              }
-            />
+                <Route
+                  path="/reception"
+                  element={
+                    <Protected roles={["Receptionist", "SystemAdmin"]}>
+                      <Reception />
+                    </Protected>
+                  }
+                />
 
-            <Route
-              path="/reception"
-              element={
-                <Protected roles={["Receptionist", "SystemAdmin"]}>
-                  <Reception />
-                </Protected>
-              }
-            />
+                {/* manager / admin */}
+                <Route
+                  path="/stats"
+                  element={
+                    <Protected roles={["HotelManager", "SystemAdmin"]}>
+                      <Stats />
+                    </Protected>
+                  }
+                />
 
-            {/* manager / admin */}
-            <Route
-              path="/stats"
-              element={
-                <Protected roles={["HotelManager", "SystemAdmin"]}>
-                  <Stats />
-                </Protected>
-              }
-            />
-
-            {/* fallback */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                {/* fallback */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
