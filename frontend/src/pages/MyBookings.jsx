@@ -72,6 +72,18 @@ export default function MyBookings() {
             <span className="font-medium">Address:</span>{" "}
             {booking.hotelDetails.address}
           </p>
+          {booking.hotelDetails.phone && (
+            <p className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Phone:</span>{" "}
+              {booking.hotelDetails.phone}
+            </p>
+          )}
+          {booking.hotelDetails.email && (
+            <p className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Email:</span>{" "}
+              {booking.hotelDetails.email}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

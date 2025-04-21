@@ -16,6 +16,8 @@ import parkingIcon from "../assets/parking.png";
 import gymIcon from "../assets/gym.png";
 import laundryIcon from "../assets/laundry.png";
 import hotelIcon from "../assets/hotel.png";
+import phoneIcon from "../assets/phone-call.png";
+import emailIcon from "../assets/email.png";
 
 export default function HotelRooms() {
   const { hotelId } = useParams();
@@ -319,6 +321,28 @@ export default function HotelRooms() {
               />
               <p>{hotel.address}</p>
             </div>
+
+            {hotel.phone && (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                <img
+                  src={phoneIcon}
+                  alt="Phone"
+                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+                />
+                <p>{hotel.phone}</p>
+              </div>
+            )}
+
+            {hotel.email && (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                <img
+                  src={emailIcon}
+                  alt="Email"
+                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
+                />
+                <p>{hotel.email}</p>
+              </div>
+            )}
           </div>
 
           <p className="text-gray-700 dark:text-gray-300">

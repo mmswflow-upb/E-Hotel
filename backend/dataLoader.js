@@ -208,6 +208,8 @@ async function seed() {
       description: `Welcome to Hotel ${h}, a ${
         3 + (h % 3)
       }-star establishment located in the heart of the city. Our hotel offers comfortable accommodations and excellent service to make your stay memorable.`,
+      phone: `+1 (555) ${100 + h}-${1000 + h}`,
+      email: `contact@hotel${h}.com`,
       availableServiceIDs,
     });
     hotelIDs.push(hotelID);

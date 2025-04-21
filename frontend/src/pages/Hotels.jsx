@@ -3,6 +3,8 @@ import api from "../lib/api";
 import { Link } from "react-router-dom";
 import hotelIcon from "../assets/hotel.png";
 import roomIcon from "../assets/room.png";
+import phoneIcon from "../assets/phone-call.png";
+import emailIcon from "../assets/email.png";
 
 export default function Hotels() {
   const [hotels, setHotels] = useState([]);
@@ -55,6 +57,16 @@ export default function Hotels() {
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Address:</span> {hotel.address}
           </p>
+          {hotel.phone && (
+            <p className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Phone:</span> {hotel.phone}
+            </p>
+          )}
+          {hotel.email && (
+            <p className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Email:</span> {hotel.email}
+            </p>
+          )}
           {hotel.description && (
             <p className="text-gray-600 dark:text-gray-300 mt-2">
               {hotel.description}
