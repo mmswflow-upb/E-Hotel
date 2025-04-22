@@ -22,7 +22,7 @@ export default function NavBar() {
   }
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-md">
+    <nav className="bg-blue-900 dark:bg-gray-800 shadow-md">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-4">
@@ -30,9 +30,9 @@ export default function NavBar() {
               <img
                 src={fiveStarsIcon}
                 alt="E-Hotels Logo"
-                className="h-12 w-12 dark:invert dark:brightness-0 dark:opacity-80"
+                className="h-12 w-12 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
               />
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">
+              <span className="text-3xl font-bold text-white dark:text-white">
                 E-Hotels
               </span>
             </Link>
@@ -41,12 +41,12 @@ export default function NavBar() {
                 {role === "Customer" && (
                   <Link
                     to="/hotels"
-                    className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                   >
                     <img
                       src={hotelIcon}
                       alt="Hotels"
-                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                     />
                     Hotels
                   </Link>
@@ -54,12 +54,12 @@ export default function NavBar() {
                 {role === "Customer" && (
                   <Link
                     to="/profile"
-                    className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                   >
                     <img
                       src={profileIcon}
                       alt="Profile"
-                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                     />
                     Profile
                   </Link>
@@ -67,12 +67,12 @@ export default function NavBar() {
                 {role === "Customer" && (
                   <Link
                     to="/my-bookings"
-                    className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                    className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                   >
                     <img
                       src={myBookingsIcon}
                       alt="My Bookings"
-                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                      className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                     />
                     My bookings
                   </Link>
@@ -81,23 +81,23 @@ export default function NavBar() {
                   <>
                     <Link
                       to="/reception"
-                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                      className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                     >
                       <img
                         src={myBookingsIcon}
                         alt="Bookings"
-                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                        className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                       />
                       Bookings
                     </Link>
                     <Link
                       to="/reception/cancellations"
-                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                      className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                     >
                       <img
                         src={requestIcon}
                         alt="Requests"
-                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                        className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                       />
                       Requests
                     </Link>
@@ -107,23 +107,23 @@ export default function NavBar() {
                   <>
                     <Link
                       to="/hotels"
-                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                      className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                     >
                       <img
                         src={hotelIcon}
                         alt="Hotels"
-                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                        className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                       />
                       Hotels
                     </Link>
                     <Link
                       to="/stats"
-                      className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                      className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                     >
                       <img
                         src={statsIcon}
                         alt="Stats"
-                        className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                        className="h-5 w-5 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
                       />
                       Stats
                     </Link>
@@ -136,7 +136,7 @@ export default function NavBar() {
             {user ? (
               <button
                 onClick={logout}
-                className="text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200 bg-transparent border-none cursor-pointer"
+                className="text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200 bg-transparent border-none cursor-pointer"
               >
                 Logout
               </button>
@@ -144,7 +144,7 @@ export default function NavBar() {
               <>
                 <Link
                   to="/login"
-                  className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                  className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -164,7 +164,7 @@ export default function NavBar() {
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center gap-2 text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary transition-colors duration-200"
+                  className="flex items-center gap-2 text-white dark:text-white hover:text-blue-200 dark:hover:text-primary transition-colors duration-200"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +186,7 @@ export default function NavBar() {
             )}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+              className="p-2 rounded-full bg-blue-800 dark:bg-gray-700 hover:bg-blue-700 dark:hover:bg-gray-600 transition-colors duration-200"
               aria-label="Toggle theme"
             >
               <img
@@ -194,8 +194,8 @@ export default function NavBar() {
                 alt="Theme toggle"
                 className={`h-5 w-5 transition-transform duration-200 ${
                   isDarkMode
-                    ? "rotate-180 dark:invert dark:brightness-0 dark:opacity-80"
-                    : ""
+                    ? "rotate-180 invert brightness-0 dark:invert dark:brightness-0 dark:opacity-80"
+                    : "invert brightness-0"
                 }`}
               />
             </button>

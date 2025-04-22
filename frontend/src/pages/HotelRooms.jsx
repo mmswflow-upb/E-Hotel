@@ -256,11 +256,7 @@ export default function HotelRooms() {
           {room.status === "available" && (
             <button
               onClick={() => book(room.roomNumber)}
-              className={`w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
-                canAfford
-                  ? "bg-green-600 hover:bg-green-500 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-500"
-                  : "bg-yellow-600 hover:bg-yellow-500 focus:ring-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-500"
-              }`}
+              className={`w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50 transition-colors duration-200`}
             >
               {canAfford ? "Book Now" : "Book with Insufficient Balance"}
             </button>
@@ -373,7 +369,7 @@ export default function HotelRooms() {
                       <p className="text-sm text-gray-600 dark:text-gray-300">
                         {service.description}
                       </p>
-                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400 mt-1">
+                      <p className="text-sm font-medium text-primary dark:text-primary-dark">
                         ${service.cost}{" "}
                         {service.isOneTime ? "one-time" : "per use"}
                       </p>
@@ -439,7 +435,7 @@ export default function HotelRooms() {
               <button
                 onClick={fetchRooms}
                 disabled={loading}
-                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors duration-200 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50 transition-colors duration-200"
               >
                 {loading ? "Loading..." : "Update Availability"}
               </button>

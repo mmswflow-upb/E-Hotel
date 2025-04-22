@@ -4,11 +4,11 @@
 
 @layer base {
   body {
-    @apply m-0 font-sans bg-white dark:bg-gray-900 text-gray-900 dark:text-white;
+    @apply m-0 font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white;
   }
 
   ::selection {
-    @apply bg-primary/30 text-gray-900 dark:text-white;
+    @apply bg-primary-light/30 text-gray-900 dark:text-white;
   }
 
   input, button, select {
@@ -24,7 +24,7 @@
   }
 
   button {
-    @apply bg-primary text-white cursor-pointer hover:opacity-90 transition-opacity;
+    @apply bg-primary text-white cursor-pointer hover:bg-primary-light transition-colors;
   }
 
   table {
@@ -86,15 +86,15 @@
   }
 
   .status-badge.booked {
-    @apply bg-success text-white;
+    @apply bg-primary text-white dark:bg-primary-dark;
   }
 
   .status-badge.occupied {
-    @apply bg-primary text-white;
+    @apply bg-primary text-white dark:bg-primary-dark;
   }
 
   .status-badge.completed {
-    @apply bg-purple-500 text-white;
+    @apply bg-primary text-white dark:bg-primary-dark;
   }
 
   .status-badge.canceled {
@@ -102,11 +102,11 @@
   }
 
   .payment-status {
-    @apply inline-flex px-3 py-1 rounded text-sm;
+    @apply inline-flex px-3 py-1 rounded text-sm font-semibold;
   }
 
   .payment-status.pending {
-    @apply bg-warning text-black;
+    @apply bg-warning text-white;
   }
 
   .payment-status.approved {
@@ -118,7 +118,7 @@
   }
 
   .cancel-button {
-    @apply bg-danger hover:opacity-90;
+    @apply bg-error text-white hover:bg-red-600 transition-colors;
   }
 
   .err {
@@ -130,11 +130,11 @@
   }
 
   .dates {
-    @apply flex gap-4 mb-4;
+    @apply flex flex-col gap-2;
   }
 
   .dates label {
-    @apply flex flex-col text-sm text-gray-700 dark:text-gray-300;
+    @apply text-gray-700 dark:text-gray-300;
   }
 }
 

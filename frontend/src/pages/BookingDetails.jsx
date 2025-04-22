@@ -57,12 +57,12 @@ export default function BookingDetail() {
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 booking.status === "booked"
-                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  ? "bg-primary text-white dark:bg-primary-dark"
                   : booking.status === "occupied"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  ? "bg-primary text-white dark:bg-primary-dark"
                   : booking.status === "completed"
-                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : "bg-error text-white"
               }`}
             >
               {booking.status}
@@ -164,7 +164,9 @@ export default function BookingDetail() {
                   }
                   alt={booking.paymentStatus}
                   className={`h-5 w-5 ${
-                    booking.paymentStatus === "approved"
+                    booking.paymentStatus === "pending"
+                      ? "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
+                      : booking.paymentStatus === "approved"
                       ? ""
                       : "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
                   }`}
@@ -188,15 +190,15 @@ export default function BookingDetail() {
             {booking.status === "booked" && (
               <button
                 onClick={cancel}
-                className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-error hover:bg-error-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error"
               >
                 Cancel Booking
               </button>
             )}
             {booking.hasInvoice && (
               <Link
-                to={`/bookings/${bookingId}/invoice`}
-                className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center flex items-center justify-center gap-2"
+                to={`/bookings/${booking.bookingID}/invoice`}
+                className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark text-center flex items-center justify-center gap-2"
               >
                 <img
                   src={invoiceIcon}

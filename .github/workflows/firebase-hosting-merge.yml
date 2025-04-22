@@ -6,13 +6,18 @@ on:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: React App Env
     steps:
       - uses: actions/checkout@v4
 
       # Run the install and build commands in the frontend folder
       - name: Install and Build
-        run: npm ci && npm run build
+        run: |
+          echo "VITE_API_URL=${{ env.VITE_API_URL }}" >> .env
+          npm ci && npm run build
         working-directory: ./frontend
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL }}
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

@@ -39,15 +39,13 @@ export default function MyBookings() {
             </h3>
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium ${
-                booking.status === "booked"
-                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  : booking.status === "occupied"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : booking.status === "completed"
-                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                  : booking.status === "canceled"
-                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                  : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                booking.status === "Booked"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : booking.status === "Occupied"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : booking.status === "Completed"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : "bg-error text-white"
               }`}
             >
               {booking.status}
@@ -137,14 +135,14 @@ export default function MyBookings() {
       <div className="mt-6 flex gap-4">
         <Link
           to={`/bookings/${booking.bookingID}`}
-          className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center"
+          className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark text-center"
         >
           View Details
         </Link>
         {booking.hasInvoice && (
           <Link
             to={`/bookings/${booking.bookingID}/invoice`}
-            className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-center flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark text-center flex items-center justify-center gap-2"
           >
             <img
               src={invoiceIcon}

@@ -8,12 +8,20 @@ export default {
         "3xl": "48rem",
       },
       colors: {
-        primary: "#0b82ff",
+        primary: {
+          DEFAULT: "#1e3a8a",
+          light: "#2563eb",
+          dark: "#7c3aed",
+          "dark-light": "#a78bfa",
+        },
         secondary: "#333",
         danger: "#ff4444",
         success: "#2ecc71",
         warning: "#f1c40f",
-        error: "#e74c3c",
+        error: {
+          DEFAULT: "#dc2626",
+          light: "#ef4444",
+        },
       },
       backgroundColor: {
         dark: {

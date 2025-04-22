@@ -8,29 +8,31 @@ export default function Footer() {
 
   return (
     <footer
-      className={`py-8 ${isDarkMode ? "bg-gray-800" : "bg-white"} shadow-inner`}
+      className={`py-8 ${
+        isDarkMode ? "bg-gray-800" : "bg-blue-900"
+      } shadow-inner`}
     >
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold mb-4 text-white dark:text-white">
               E-Hotels
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-blue-100 dark:text-gray-300">
               Your premier destination for luxury accommodations and exceptional
               service.
             </p>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold mb-4 text-white dark:text-white">
               Quick Links
             </h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                  className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                 >
                   Home
                 </Link>
@@ -40,7 +42,7 @@ export default function Footer() {
                   <li>
                     <Link
                       to="/login"
-                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                      className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                     >
                       Login
                     </Link>
@@ -48,7 +50,7 @@ export default function Footer() {
                   <li>
                     <Link
                       to="/register"
-                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                      className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                     >
                       Register
                     </Link>
@@ -61,7 +63,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/hotels"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Hotels
                         </Link>
@@ -69,7 +71,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/my-bookings"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           My Bookings
                         </Link>
@@ -77,7 +79,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/profile"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Profile
                         </Link>
@@ -89,7 +91,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/hotels"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Manage Hotels
                         </Link>
@@ -97,7 +99,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/stats"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Stats
                         </Link>
@@ -109,7 +111,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/reception"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Bookings
                         </Link>
@@ -117,7 +119,7 @@ export default function Footer() {
                       <li>
                         <Link
                           to="/reception/cancellations"
-                          className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                          className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                         >
                           Requests
                         </Link>
@@ -130,14 +132,14 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold mb-4 text-white dark:text-white">
               Legal
             </h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   to="/privacy"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                  className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                 >
                   Privacy Policy
                 </Link>
@@ -145,7 +147,7 @@ export default function Footer() {
               <li>
                 <Link
                   to="/terms"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                  className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                 >
                   Terms of Service
                 </Link>
@@ -153,7 +155,7 @@ export default function Footer() {
               <li>
                 <Link
                   to="/cookies"
-                  className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors"
+                  className="text-blue-100 dark:text-gray-300 hover:text-blue-200 dark:hover:text-primary transition-colors"
                 >
                   Cookie Policy
                 </Link>
@@ -162,26 +164,26 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold mb-4 text-white dark:text-white">
               Contact
             </h3>
             <ul className="space-y-2">
-              <li className="text-gray-600 dark:text-gray-300">
+              <li className="text-blue-100 dark:text-gray-300">
                 Email: support@ehotels.com
               </li>
-              <li className="text-gray-600 dark:text-gray-300">
+              <li className="text-blue-100 dark:text-gray-300">
                 Phone: +1 (555) 123-4567
               </li>
-              <li className="text-gray-600 dark:text-gray-300">
+              <li className="text-blue-100 dark:text-gray-300">
                 Address: 123 Hotel Street, Suite 100
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-center text-gray-600 dark:text-gray-300">
-            © {new Date().getFullYear()} E-Hotels. All rights reserved.
+        <div className="mt-8 pt-8 border-t border-blue-700 dark:border-gray-700">
+          <p className="text-center text-blue-100 dark:text-gray-300">
+            © {new Date().getFullYear()} mmswflow
           </p>
         </div>
       </div>

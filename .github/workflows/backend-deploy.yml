@@ -27,6 +27,12 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ secrets.GCP_LOCATION }}-docker.pkg.dev
 
+      # Create Firebase service account credentials file
+      - name: Create Firebase credentials
+        run: |
+          mkdir -p ./backend/credentials
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_E_HOTEL_SDM }}' > ./backend/credentials/firebase-sa.json
+
       # 🚀 Build and push the image from /backend
       - name: Build and Push Docker image
         run: |
@@ -44,4 +50,5 @@ jobs:
             --port 8080 \
             --project ${{ secrets.GCP_PROJECT_ID }} \
             --service-account ${{ secrets.GCP_SA_SERVER_DEPLOY_NAME }} \
+            --set-env-vars="GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/firebase-sa.json,FIRESTORE_DATABASE_ID=${{ secrets.FIRESTORE_DATABASE_ID }}" \
             --allow-unauthenticated
