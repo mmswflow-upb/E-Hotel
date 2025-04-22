@@ -1,6 +1,6 @@
 // services/statsService.js
 const { db } = require("../firebase");
-const StatisticsReport = require("../models/StatisticsReport");
+const StatisticsReport = require("../models/statisticsReport");
 
 const bookingsCol = db.collection("bookings");
 const cancelsCol = db.collection("cancellations");

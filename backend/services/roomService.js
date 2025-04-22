@@ -1,6 +1,6 @@
 // services/roomService.js
 const { db } = require("../firebase");
-const Room = require("../models/Room");
+const Room = require("../models/room");
 const bookingService = require("./bookingService");
 
 const roomsCol = db.collection("rooms");

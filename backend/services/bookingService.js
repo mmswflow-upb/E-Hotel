@@ -1,8 +1,8 @@
 // services/bookingService.js
 const { db, admin } = require("../firebase");
-const Booking = require("../models/Booking");
-const CancellationRecord = require("../models/CancellationRecord");
-const PaymentTransaction = require("../models/PaymentTransaction");
+const Booking = require("../models/booking");
+const CancellationRecord = require("../models/cancellationRecord");
+const PaymentTransaction = require("../models/paymentTransaction");
 const Invoice = require("../models/invoice");
 const roomService = require("./roomService");
 
