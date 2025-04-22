@@ -13,13 +13,28 @@ jobs:
       # Run the install and build commands in the frontend folder
       - name: Install and Build
         run: |
-          echo "Setting up environment variables..."
+          echo "=== Environment Setup ==="
+          echo "Current directory: $(pwd)"
+          echo "Environment variables from GitHub:"
+          echo "VITE_API_URL=${{ env.VITE_API_URL }}"
+
+          echo "Creating .env file..."
           touch .env
           echo "VITE_API_URL=${{ env.VITE_API_URL }}" > .env
-          echo "Environment variables:"
+
+          echo "Contents of .env file:"
           cat .env
-          echo "Building application..."
-          npm ci && npm run build
+
+          echo "=== Build Process ==="
+          echo "Running npm ci..."
+          npm ci
+
+          echo "Running npm run build..."
+          npm run build
+
+          echo "=== Build Output ==="
+          echo "Contents of dist directory:"
+          ls -la dist
         working-directory: ./frontend
         env:
           VITE_API_URL: ${{ env.VITE_API_URL }}
