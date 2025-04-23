@@ -7,6 +7,7 @@ import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
+import "./MyBookings.css";
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState({
@@ -37,17 +38,7 @@ export default function MyBookings() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               {booking.hotelDetails.name}
             </h3>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                booking.status === "Booked"
-                  ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "Occupied"
-                  ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "Completed"
-                  ? "bg-primary text-white dark:bg-primary-dark"
-                  : "bg-error text-white"
-              }`}
-            >
+            <span className={`status-badge ${booking.status.toLowerCase()}`}>
               {booking.status}
             </span>
           </div>

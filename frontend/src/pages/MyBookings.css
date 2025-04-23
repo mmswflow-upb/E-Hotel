@@ -49,14 +49,14 @@
 
 .status-badge {
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 500;
 }
 
 .status-badge.booked {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: #1e3a8a;
+  color: white;
 }
 
 .status-badge.occupied {
