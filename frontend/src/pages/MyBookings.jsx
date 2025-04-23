@@ -38,7 +38,17 @@ export default function MyBookings() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
               {booking.hotelDetails.name}
             </h3>
-            <span className={`status-badge ${booking.status.toLowerCase()}`}>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${
+                booking.status === "booked"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : booking.status === "occupied"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : booking.status === "completed"
+                  ? "bg-primary text-white dark:bg-primary-dark"
+                  : "bg-error text-white"
+              }`}
+            >
               {booking.status}
             </span>
           </div>
