@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useLoading } from "../contexts/LoadingContext";
 import profileIcon from "../assets/profile.png";
 import phoneIcon from "../assets/phone-call.png";
 import idCardIcon from "../assets/id-card.png";
@@ -10,6 +11,7 @@ import deniedIcon from "../assets/denied.png";
 
 export default function Profile() {
   const { role } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
   const [userData, setUserData] = useState({});
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
@@ -17,10 +19,13 @@ export default function Profile() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        showLoading();
         const response = await api.get("/accounts/me");
         setUserData(response.data);
       } catch (e) {
         setErr(e.message);
+      } finally {
+        hideLoading();
       }
     };
 
@@ -45,12 +50,15 @@ export default function Profile() {
     setErr("");
     setMsg("");
     try {
+      showLoading();
       await api.put("/accounts/me", userData);
       setMsg("Profile updated successfully");
     } catch (e) {
       // Extract error message from response if available
       const errorMessage = e.response?.data?.error || e.message;
       setErr(errorMessage);
+    } finally {
+      hideLoading();
     }
   }
 

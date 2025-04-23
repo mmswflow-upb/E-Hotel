@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useLoading } from "../contexts/LoadingContext";
 import roomIcon from "../assets/room.png";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
@@ -22,12 +23,12 @@ import emailIcon from "../assets/email.png";
 export default function HotelRooms() {
   const { hotelId } = useParams();
   const { user } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [hotel, setHotel] = useState(null);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
-  const [loading, setLoading] = useState(false);
   const [userAccount, setUserAccount] = useState(null);
 
   // date state
@@ -41,10 +42,13 @@ export default function HotelRooms() {
 
     const fetchUserAccount = async () => {
       try {
+        showLoading();
         const response = await api.get("/accounts/me");
         setUserAccount(response.data);
       } catch (error) {
         console.error("Error fetching user account:", error);
+      } finally {
+        hideLoading();
       }
     };
 
@@ -65,6 +69,7 @@ export default function HotelRooms() {
 
     const fetchHotelDetails = async () => {
       try {
+        showLoading();
         const response = await api.get(`/hotels/${hotelId}`);
         setHotel(response.data);
       } catch (error) {
@@ -82,6 +87,8 @@ export default function HotelRooms() {
         } else {
           setErr(error.response?.data?.error || "Error fetching hotel details");
         }
+      } finally {
+        hideLoading();
       }
     };
     fetchHotelDetails();
@@ -107,24 +114,20 @@ export default function HotelRooms() {
   const fetchRooms = async () => {
     if (!user) return; // Don't fetch if not authenticated
 
-    setLoading(true);
-    setErr("");
     try {
+      showLoading();
       const response = await api.get(`/hotels/${hotelId}/rooms`, {
-        params: {
-          checkInDate: ci,
-          checkOutDate: co,
-        },
+        params: { checkIn: ci, checkOut: co },
       });
       setRooms(response.data);
-    } catch (e) {
-      if (e.response?.status === 401) {
+    } catch (error) {
+      if (error.response?.status === 401) {
         setErr("Please log in to view available rooms");
       } else {
-        setErr(e.response?.data?.error || e.message);
+        setErr(error.response?.data?.error || error.message);
       }
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   };
 
@@ -136,41 +139,21 @@ export default function HotelRooms() {
   }, [hotelId, user]);
 
   async function book(num) {
-    setErr("");
-    setMsg("");
     try {
-      const ciD = new Date(ci),
-        coD = new Date(co);
-      if (coD <= ciD) {
-        setErr("Check‑out must be after check‑in");
-        return;
-      }
-      const room = rooms.find((r) => r.roomNumber === num);
-      if (!room) {
-        setErr("Room not found");
-        return;
-      }
-      const nights = Math.ceil((coD - ciD) / (1000 * 60 * 60 * 24));
-      const totalAmount = room.pricePerNight * nights;
-
-      // Check if user can afford the room
-      if (user?.balance < totalAmount) {
-        const proceed = window.confirm(
-          `Warning: Your current balance ($${user?.balance}) is insufficient for this booking ($${totalAmount}).\n\nDo you want to proceed anyway? You'll need to add funds before the check-in date.`
-        );
-        if (!proceed) return;
-      }
-
-      await api.post(`/hotels/${hotelId}/bookings`, {
-        roomDetails: [num],
-        checkInDate: ciD.toISOString(),
-        checkOutDate: coD.toISOString(),
-        totalAmount,
+      showLoading();
+      const response = await api.post("/bookings", {
+        roomID: num,
+        checkIn: ci,
+        checkOut: co,
       });
-      setMsg("Booked!");
-      fetchRooms(); // Refresh room list after booking
-    } catch (e) {
-      setErr(e.message);
+      setMsg("Room booked successfully!");
+      setTimeout(() => {
+        navigate("/my-bookings");
+      }, 2000);
+    } catch (error) {
+      setErr(error.response?.data?.error || error.message);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -434,10 +417,9 @@ export default function HotelRooms() {
             <div className="flex items-end">
               <button
                 onClick={fetchRooms}
-                disabled={loading}
                 className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50 transition-colors duration-200"
               >
-                {loading ? "Loading..." : "Update Availability"}
+                Update Availability
               </button>
             </div>
           </div>

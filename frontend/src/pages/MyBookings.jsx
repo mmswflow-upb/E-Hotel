@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
+import { useLoading } from "../contexts/LoadingContext";
 import scheduledIcon from "../assets/scheduled.png";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
@@ -16,14 +17,18 @@ export default function MyBookings() {
     future: [],
   });
   const [err, setErr] = useState("");
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     (async () => {
       try {
+        showLoading();
         const response = await api.get("/bookings");
         setBookings(response.data);
       } catch (e) {
         setErr(e.response?.data?.error || e.message);
+      } finally {
+        hideLoading();
       }
     })();
   }, []);

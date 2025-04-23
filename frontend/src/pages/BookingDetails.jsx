@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
+import { useLoading } from "../contexts/LoadingContext";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
@@ -9,6 +10,7 @@ import invoiceIcon from "../assets/invoice.png";
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
+  const { showLoading, hideLoading } = useLoading();
   const [booking, setBooking] = useState(null);
   const [invoice, setInvoice] = useState(null);
   const [msg, setMsg] = useState("");
@@ -17,6 +19,7 @@ export default function BookingDetail() {
   useEffect(() => {
     (async () => {
       try {
+        showLoading();
         const res = await api.get(`/bookings/${bookingId}`);
         setBooking(res.data);
         if (res.data.hasInvoice) {
@@ -27,6 +30,8 @@ export default function BookingDetail() {
         }
       } catch (e) {
         setErr(e.message);
+      } finally {
+        hideLoading();
       }
     })();
   }, [bookingId]);
@@ -35,16 +40,19 @@ export default function BookingDetail() {
     setErr("");
     setMsg("");
     try {
+      showLoading();
       await api.post(`/bookings/${bookingId}/cancel`);
       setBooking({ ...booking, status: "canceled" });
       setMsg("Canceled.");
     } catch (e) {
       setErr(e.message);
+    } finally {
+      hideLoading();
     }
   }
 
   if (err) return <p className="text-red-500 text-center">{err}</p>;
-  if (!booking) return <p>Loading…</p>;
+  if (!booking) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">

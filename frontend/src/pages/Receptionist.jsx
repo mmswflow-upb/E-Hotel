@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import { useLoading } from "../contexts/LoadingContext";
 
 export default function Reception() {
+  const { showLoading, hideLoading } = useLoading();
   const [hotels, setHotels] = useState([]);
   const [hotel, setHotel] = useState("");
   const [email, setEmail] = useState("");
@@ -9,13 +11,19 @@ export default function Reception() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    api.get("/hotels").then((r) => setHotels(r.data));
+    showLoading();
+    api
+      .get("/hotels")
+      .then((r) => setHotels(r.data))
+      .catch((e) => setErr(e.message))
+      .finally(() => hideLoading());
   }, []);
 
   async function createBooking() {
     setErr("");
     setMsg("");
     try {
+      showLoading();
       // assume helper endpoint
       const u = await api.get(`/users/by-email`, { params: { email } });
       const uid = u.data.uid;
@@ -35,6 +43,8 @@ export default function Reception() {
       setMsg("Booking created");
     } catch (e) {
       setErr(e.message);
+    } finally {
+      hideLoading();
     }
   }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
+import { useLoading } from "../contexts/LoadingContext";
 import hotelIcon from "../assets/hotel.png";
 import roomIcon from "../assets/room.png";
 import phoneIcon from "../assets/phone-call.png";
@@ -9,27 +10,23 @@ import emailIcon from "../assets/email.png";
 export default function Hotels() {
   const [hotels, setHotels] = useState([]);
   const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
+    showLoading();
     api
       .get("/hotels")
       .then((r) => {
         setHotels(r.data);
-        setLoading(false);
       })
       .catch((e) => {
         setErr(e.response?.data?.error || e.message);
-        setLoading(false);
+      })
+      .finally(() => {
+        hideLoading();
       });
   }, []);
 
-  if (loading)
-    return (
-      <p className="text-center text-gray-600 dark:text-gray-300">
-        Loading hotels...
-      </p>
-    );
   if (err) return <p className="text-red-500 text-center">{err}</p>;
 
   const HotelCard = ({ hotel }) => (

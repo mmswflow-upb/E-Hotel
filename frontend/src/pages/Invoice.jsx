@@ -1,22 +1,26 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../lib/api";
+import { useLoading } from "../contexts/LoadingContext";
 import invoiceIcon from "../assets/invoice.png";
 
 export default function Invoice() {
   const { bookingId } = useParams();
+  const { showLoading, hideLoading } = useLoading();
   const [inv, setInv] = useState(null);
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    showLoading();
     api
       .get(`/invoices/booking/${bookingId}`)
       .then((r) => setInv(r.data[0])) // Get the first invoice since getInvoicesByBooking returns an array
-      .catch((e) => setErr(e.message));
+      .catch((e) => setErr(e.message))
+      .finally(() => hideLoading());
   }, [bookingId]);
 
   if (err) return <p className="err text-center py-8">{err}</p>;
-  if (!inv) return <p className="text-center py-8">Loading…</p>;
+  if (!inv) return null;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">

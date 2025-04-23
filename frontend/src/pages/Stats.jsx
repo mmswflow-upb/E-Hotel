@@ -1,20 +1,28 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import { useLoading } from "../contexts/LoadingContext";
 
 export default function Stats() {
+  const { showLoading, hideLoading } = useLoading();
   const [hotels, setHotels] = useState([]);
   const [hotel, setHotel] = useState("");
   const [stats, setStats] = useState(null);
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    api.get("/hotels").then((r) => setHotels(r.data));
+    showLoading();
+    api
+      .get("/hotels")
+      .then((r) => setHotels(r.data))
+      .catch((e) => setErr(e.message))
+      .finally(() => hideLoading());
   }, []);
 
   async function load() {
     setErr("");
     setStats(null);
     try {
+      showLoading();
       const dt = new Date();
       const y = dt.getFullYear();
       const m = dt.getMonth() + 1;
@@ -24,6 +32,8 @@ export default function Stats() {
       setStats(r.data);
     } catch (e) {
       setErr(e.message);
+    } finally {
+      hideLoading();
     }
   }
 
