@@ -12,23 +12,33 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {!user ? (
-          <div className="mt-8 space-y-4 text-center">
-            <p className="text-gray-600 dark:text-gray-300">
-              Book rooms at amazing hotels in seconds.
-            </p>
+          <div className="mt-8 space-y-8 text-center">
             <div className="space-y-4">
-              <Link
-                to="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark"
-              >
-                Register
-              </Link>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                Welcome to E-Hotels
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300">
+                Book rooms at amazing hotels in seconds
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark transition-colors duration-200"
+                >
+                  Register
+                </Link>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Experience luxury accommodations and exceptional service
+              </p>
             </div>
           </div>
         ) : (
