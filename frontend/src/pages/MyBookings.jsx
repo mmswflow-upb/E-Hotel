@@ -8,7 +8,6 @@ import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
-import "./MyBookings.css";
 
 export default function MyBookings() {
   const [bookings, setBookings] = useState({

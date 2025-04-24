@@ -139,3 +139,6 @@ serviceAccountKey.json
 
 GCP_SA_KEY.json
 firebase-sa.json
+
+.cursor/
+.cursorignore
