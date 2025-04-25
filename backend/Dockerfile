@@ -3,17 +3,20 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Create credentials directory
+RUN mkdir -p /app/credentials
+
 # 1) Only copy your lockfile + package.json so you can leverage layer caching
 COPY package*.json ./
 
-# 2) Tell npm you’re in production, and use CI for a clean, reproducible install
+# 2) Tell npm you're in production, and use CI for a clean, reproducible install
 ENV NODE_ENV=production
 RUN npm ci --omit=dev
 
 # 3) Now copy the rest of your source
 COPY . .
 
-# 4) Cloud Run will always set $PORT (it defaults to 8080)
+# 4) Cloud Run will always set $PORT (it defaults to 8080)
 #    So expose 8080 (EXPOSE is just documentation, but good to match your code)
 ENV PORT=8080
 EXPOSE 8080
