@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p ./backend/credentials
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_E_HOTEL_SDM }}' > ./backend/credentials/firebase-sa.json
+          chmod 644 ./backend/credentials/firebase-sa.json
 
       # 🚀 Build and push the image from /backend
       - name: Build and Push Docker image
