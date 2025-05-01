@@ -3,6 +3,7 @@ require("dotenv").config();
 const admin = require("firebase-admin");
 const { getFirestore } = require("firebase-admin/firestore");
 const path = require("path");
+const fs = require("fs");
 
 const dbId = process.env.FIRESTORE_DATABASE_ID; // e.g. "e-hotel" or "e-hotel-sdm-db"
 
@@ -14,6 +15,21 @@ try {
     "credentials",
     "firebase-sa.json"
   );
+  console.log("🔍 Looking for credentials at:", serviceAccountPath);
+  console.log(
+    "📁 Credentials directory exists:",
+    fs.existsSync(path.dirname(serviceAccountPath))
+  );
+  console.log("📄 Credentials file exists:", fs.existsSync(serviceAccountPath));
+
+  if (fs.existsSync(serviceAccountPath)) {
+    console.log(
+      "📝 Credentials file size:",
+      fs.statSync(serviceAccountPath).size,
+      "bytes"
+    );
+  }
+
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccountPath),
   });

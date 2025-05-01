@@ -3,9 +3,6 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Create credentials directory and set proper permissions
-RUN mkdir -p /app/credentials && chmod 755 /app/credentials
-
 # 1) Only copy your lockfile + package.json so you can leverage layer caching
 COPY package*.json ./
 
