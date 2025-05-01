@@ -6,16 +6,12 @@ import { useLoading } from "../contexts/LoadingContext";
 import roomIcon from "../assets/room.png";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
-import calendarIcon from "../assets/calendar.png";
+
 // Import local icons
 import mapPinIcon from "../assets/map-pin.png";
 import wifiIcon from "../assets/wifi.png";
 import restaurantIcon from "../assets/restaurant.png";
 import poolIcon from "../assets/pool.png";
-import spaIcon from "../assets/spa.png";
-import parkingIcon from "../assets/parking.png";
-import gymIcon from "../assets/gym.png";
-import laundryIcon from "../assets/laundry.png";
 import hotelIcon from "../assets/hotel.png";
 import phoneIcon from "../assets/phone-call.png";
 import emailIcon from "../assets/email.png";
