@@ -11,12 +11,41 @@ export default function Invoice() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    showLoading();
-    api
-      .get(`/invoices/booking/${bookingId}`)
-      .then((r) => setInv(r.data[0])) // Get the first invoice since getInvoicesByBooking returns an array
-      .catch((e) => setErr(e.message))
-      .finally(() => hideLoading());
+    (async () => {
+      try {
+        showLoading();
+        // First get all hotels
+        const hotelsResponse = await api.get("/hotels");
+        const hotels = hotelsResponse.data;
+
+        // Search for the booking in each hotel
+        let foundInvoice = null;
+        for (const hotel of hotels) {
+          try {
+            const response = await api.get(
+              `/hotels/${hotel.hotelID}/bookings/${bookingId}/invoice`
+            );
+            if (response.data) {
+              foundInvoice = response.data;
+              break;
+            }
+          } catch (error) {
+            // Continue to next hotel if invoice not found
+            continue;
+          }
+        }
+
+        if (!foundInvoice) {
+          throw new Error("Invoice not found");
+        }
+
+        setInv(foundInvoice);
+      } catch (e) {
+        setErr(e.message);
+      } finally {
+        hideLoading();
+      }
+    })();
   }, [bookingId]);
 
   if (err) return <p className="err text-center py-8">{err}</p>;

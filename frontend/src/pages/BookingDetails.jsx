@@ -20,9 +20,33 @@ export default function BookingDetail() {
     (async () => {
       try {
         showLoading();
-        const res = await api.get(`/bookings/${bookingId}`);
-        setBooking(res.data);
-        if (res.data.hasInvoice) {
+        // First get all hotels
+        const hotelsResponse = await api.get("/hotels");
+        const hotels = hotelsResponse.data;
+
+        // Search for the booking in each hotel
+        let foundBooking = null;
+        for (const hotel of hotels) {
+          try {
+            const response = await api.get(
+              `/hotels/${hotel.hotelID}/bookings/${bookingId}`
+            );
+            if (response.data) {
+              foundBooking = response.data;
+              break;
+            }
+          } catch (error) {
+            // Continue to next hotel if booking not found
+            continue;
+          }
+        }
+
+        if (!foundBooking) {
+          throw new Error("Booking not found");
+        }
+
+        setBooking(foundBooking);
+        if (foundBooking.hasInvoice) {
           try {
             const iv = await api.get(`/invoices/booking/${bookingId}`);
             setInvoice(iv.data);
@@ -41,7 +65,31 @@ export default function BookingDetail() {
     setMsg("");
     try {
       showLoading();
-      await api.post(`/bookings/${bookingId}/cancel`);
+      // First get all hotels
+      const hotelsResponse = await api.get("/hotels");
+      const hotels = hotelsResponse.data;
+
+      // Find the hotel that has this booking
+      let hotelId = null;
+      for (const hotel of hotels) {
+        try {
+          const response = await api.get(
+            `/hotels/${hotel.hotelID}/bookings/${bookingId}`
+          );
+          if (response.data) {
+            hotelId = hotel.hotelID;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      if (!hotelId) {
+        throw new Error("Booking not found");
+      }
+
+      await api.post(`/hotels/${hotelId}/bookings/${bookingId}/cancel`);
       setBooking({ ...booking, status: "canceled" });
       setMsg("Canceled.");
     } catch (e) {

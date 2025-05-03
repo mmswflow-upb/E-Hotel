@@ -3,6 +3,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
 const bookingCtrl = require("../controllers/bookingController");
+const invoiceCtrl = require("../controllers/invoiceController");
 
 const router = express.Router();
 
@@ -46,6 +47,7 @@ router.get(
   }
 );
 
+// Create booking route
 router.post("/", role("Customer", "Receptionist"), (req, res, next) => {
   const userRole = req.user.role;
 
@@ -88,6 +90,26 @@ router.post(
   "/:bookingId/checkout",
   role("Receptionist"),
   bookingCtrl.checkOutBooking
+);
+
+// Get invoice for booking
+router.get(
+  "/:bookingId/invoice",
+  role("Customer", "Receptionist", "HotelManager", "SystemAdmin"),
+  async (req, res) => {
+    try {
+      const invoices = await invoiceCtrl.getInvoicesByBooking(
+        req.params.bookingId
+      );
+      if (!invoices || invoices.length === 0) {
+        return res.status(404).json({ error: "Invoice not found" });
+      }
+      // Return the first invoice since a booking should only have one invoice
+      res.json(invoices[0]);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  }
 );
 
 module.exports = router;

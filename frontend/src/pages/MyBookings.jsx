@@ -22,8 +22,50 @@ export default function MyBookings() {
     (async () => {
       try {
         showLoading();
-        const response = await api.get("/bookings");
-        setBookings(response.data);
+        // Get all hotels first
+        const hotelsResponse = await api.get("/hotels");
+        const hotels = hotelsResponse.data;
+
+        // Fetch bookings from each hotel
+        const allBookings = await Promise.all(
+          hotels.map(async (hotel) => {
+            try {
+              const response = await api.get(
+                `/hotels/${hotel.hotelID}/bookings`
+              );
+              return response.data;
+            } catch (error) {
+              console.error(
+                `Error fetching bookings for hotel ${hotel.hotelID}:`,
+                error
+              );
+              return { history: [], active: [], future: [] };
+            }
+          })
+        );
+
+        // Combine bookings from all hotels and remove duplicates
+        const combinedBookings = allBookings.reduce(
+          (acc, hotelBookings) => {
+            // Helper function to add unique bookings
+            const addUniqueBookings = (source, target) => {
+              const existingIds = new Set(target.map((b) => b.bookingID));
+              return [
+                ...target,
+                ...source.filter((b) => !existingIds.has(b.bookingID)),
+              ];
+            };
+
+            return {
+              history: addUniqueBookings(hotelBookings.history, acc.history),
+              active: addUniqueBookings(hotelBookings.active, acc.active),
+              future: addUniqueBookings(hotelBookings.future, acc.future),
+            };
+          },
+          { history: [], active: [], future: [] }
+        );
+
+        setBookings(combinedBookings);
       } catch (e) {
         setErr(e.response?.data?.error || e.message);
       } finally {
@@ -49,8 +91,8 @@ export default function MyBookings() {
                   : booking.status === "occupied"
                   ? "bg-primary text-white dark:bg-primary-dark"
                   : booking.status === "completed"
-                  ? "bg-primary text-white dark:bg-primary-dark"
-                  : "bg-error text-white"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
               }`}
             >
               {booking.status}

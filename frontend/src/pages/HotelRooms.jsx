@@ -137,10 +137,11 @@ export default function HotelRooms() {
   async function book(num) {
     try {
       showLoading();
-      const response = await api.post("/bookings", {
+      const response = await api.post(`/hotels/${hotelId}/bookings`, {
         roomID: num,
-        checkIn: ci,
-        checkOut: co,
+        checkInDate: ci,
+        checkOutDate: co,
+        totalAmount: 200, // Assuming a fixed amount for now, you might want to get this from the room data
       });
       setMsg("Room booked successfully!");
       setTimeout(() => {

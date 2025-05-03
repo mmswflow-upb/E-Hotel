@@ -21,6 +21,7 @@ exports.createBooking = async ({
   totalAmount,
 }) => {
   try {
+    console.log("Starting booking creation process...");
     // Validate required fields
     if (!hotelId) return { error: "Hotel ID is required" };
     if (!customerID) return { error: "Customer ID is required" };
@@ -35,29 +36,89 @@ exports.createBooking = async ({
     if (!checkOutDate) return { error: "Check-out date is required" };
     if (!totalAmount) return { error: "Total amount is required" };
 
+    console.log("Checking customer balance...");
+    // Check customer balance
+    const customerDoc = await db.collection("customers").doc(customerID).get();
+    if (!customerDoc.exists) return { error: "Customer not found" };
+    const customerData = customerDoc.data();
+    const hasSufficientBalance = customerData.balance >= totalAmount;
+
+    console.log("Checking room availability...");
     const ok = await roomService.checkAvailability(hotelId, roomDetails);
     if (!ok) return { error: "One or more rooms unavailable" };
 
-    // mark rooms booked
-    await Promise.all(
-      roomDetails.map((rid) => roomService.updateRoomStatus(rid, "booked"))
-    );
+    console.log("Starting transaction...");
+    let bookingId;
+    // Start a transaction to ensure atomicity
+    await db.runTransaction(async (transaction) => {
+      if (hasSufficientBalance) {
+        console.log("Updating customer balance...");
+        // Update customer balance only if sufficient
+        transaction.update(db.collection("customers").doc(customerID), {
+          balance: admin.firestore.FieldValue.increment(-totalAmount),
+        });
+      }
 
-    const payload = {
-      hotelID: hotelId,
-      customerID,
-      roomDetails,
-      checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
-      checkOutDate: admin.firestore.Timestamp.fromDate(new Date(checkOutDate)),
-      cancellationGracePeriod,
-      totalAmount,
-      status: "booked",
-      createdAt: admin.firestore.Timestamp.now(),
-    };
-    const ref = await bookingsCol.add(payload);
-    const d = await ref.get();
+      console.log("Creating payment transaction...");
+      // Create payment transaction
+      const paymentPayload = {
+        bookingID: null, // Will be updated after booking creation
+        amount: totalAmount,
+        paymentMethod: "balance",
+        transactionDate: admin.firestore.Timestamp.now(),
+        status: hasSufficientBalance ? "approved" : "pending",
+      };
+      const paymentRef = db.collection("paymentTransactions").doc();
+      transaction.set(paymentRef, paymentPayload);
+
+      console.log("Updating room status...");
+      // mark rooms booked
+      await Promise.all(
+        roomDetails.map((rid) => roomService.updateRoomStatus(rid, "booked"))
+      );
+
+      const bookingPayload = {
+        hotelID: hotelId,
+        customerID,
+        roomDetails,
+        checkInDate: admin.firestore.Timestamp.fromDate(new Date(checkInDate)),
+        checkOutDate: admin.firestore.Timestamp.fromDate(
+          new Date(checkOutDate)
+        ),
+        cancellationGracePeriod,
+        totalAmount,
+        status: "booked",
+        createdAt: admin.firestore.Timestamp.now(),
+        paymentTransactionID: paymentRef.id,
+      };
+
+      console.log("Creating booking...");
+      // Create booking
+      const bookingRef = db.collection("bookings").doc();
+      bookingId = bookingRef.id;
+      transaction.set(bookingRef, bookingPayload);
+
+      console.log("Updating payment transaction with booking ID...");
+      // Update payment transaction with booking ID
+      transaction.update(paymentRef, {
+        bookingID: bookingId,
+      });
+    });
+
+    console.log("Transaction completed, retrieving booking...");
+    // Get the created booking
+    const bookingDoc = await db.collection("bookings").doc(bookingId).get();
+
+    if (!bookingDoc.exists) {
+      console.log("Failed to find created booking");
+      return { error: "Failed to create booking" };
+    }
+
+    console.log(`✅ New booking created with ID: ${bookingId}`);
+
+    const bookingData = bookingDoc.data();
     return new Booking({
-      bookingID: d.id,
+      bookingID: bookingId,
       hotelID: hotelId,
       customerID,
       roomDetails,
@@ -66,9 +127,10 @@ exports.createBooking = async ({
       cancellationGracePeriod,
       totalAmount,
       status: "booked",
-      createdAt: d.data().createdAt.toDate(),
+      createdAt: bookingData.createdAt.toDate(),
     });
   } catch (e) {
+    console.error("Error in createBooking:", e);
     return { error: e.message };
   }
 };

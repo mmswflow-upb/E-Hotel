@@ -1,5 +1,6 @@
 // controllers/bookingController.js
 const bookingSvc = require("../services/bookingService");
+const { db } = require("../firebase");
 
 exports.create = async (req, res) => {
   try {
@@ -71,9 +72,37 @@ exports.getByIdMine = async (req, res) => {
 
 exports.createCustomer = async (req, res) => {
   try {
+    const hotelId = req.hotelId;
+    if (!hotelId) {
+      return res.status(400).json({ error: "Missing HotelID" });
+    }
+
+    if (!req.body.roomID) {
+      return res.status(400).json({ error: "Missing RoomID" });
+    }
+
+    // Query the room document to get its ID
+    const roomQuery = await db
+      .collection("rooms")
+      .where("hotelID", "==", hotelId)
+      .where("roomNumber", "==", req.body.roomID.toString())
+      .limit(1)
+      .get();
+
+    if (roomQuery.empty) {
+      return res.status(400).json({ error: "Room not found" });
+    }
+
+    const roomDoc = roomQuery.docs[0];
+
     const booking = await bookingSvc.createBooking({
-      ...req.body,
-      customerId: req.user.id,
+      hotelId: hotelId,
+      customerID: req.user.uid,
+      roomDetails: [roomDoc.id], // Use the room document ID
+      checkInDate: req.body.checkInDate,
+      checkOutDate: req.body.checkOutDate,
+      cancellationGracePeriod: 24,
+      totalAmount: req.body.totalAmount || 0,
     });
     res.status(201).json(booking);
   } catch (e) {
@@ -95,8 +124,14 @@ exports.cancelCustomer = async (req, res) => {
 exports.createReceptionist = async (req, res) => {
   try {
     const booking = await bookingSvc.createBooking({
-      ...req.body,
-      createdBy: req.user.id,
+      hotelId: req.body.hotelId,
+      customerID: req.body.customerID,
+      roomDetails: req.body.roomDetails,
+      checkInDate: req.body.checkInDate,
+      checkOutDate: req.body.checkOutDate,
+      cancellationGracePeriod: req.body.cancellationGracePeriod,
+      totalAmount: req.body.totalAmount,
+      createdBy: req.user.uid,
     });
     res.status(201).json(booking);
   } catch (e) {

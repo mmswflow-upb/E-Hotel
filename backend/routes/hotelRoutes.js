@@ -13,6 +13,12 @@ const router = express.Router();
 // Apply auth middleware to all routes
 router.use(auth);
 
+// Middleware to merge hotelId into request object for nested routes
+router.param("hotelId", (req, res, next, hotelId) => {
+  req.hotelId = hotelId;
+  next();
+});
+
 // List hotels with role-based access
 router.get("/", (req, res, next) => {
   const userRole = req.user.role;

@@ -32,10 +32,9 @@ export default function Reception() {
       if (!room) throw new Error("No available rooms");
       const today = new Date();
       const tomorrow = new Date(today.getTime() + 24 * 3600e3);
-      await api.post(`/bookings`, {
+      await api.post(`/hotels/${hotel}/bookings`, {
         customerId: uid,
-        hotelId: hotel,
-        roomDetails: [room.roomNumber],
+        roomID: room.roomNumber,
         checkInDate: today.toISOString(),
         checkOutDate: tomorrow.toISOString(),
         totalAmount: 200,
