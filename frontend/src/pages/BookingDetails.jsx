@@ -7,6 +7,9 @@ import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
+import mapPinIcon from "../assets/map-pin.png";
+import phoneIcon from "../assets/phone-call.png";
+import emailIcon from "../assets/email.png";
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
@@ -145,22 +148,48 @@ export default function BookingDetail() {
                   </span>
                 ))}
               </p>
-              <p className="text-gray-600 dark:text-gray-300">
-                <span className="font-medium">Address:</span>{" "}
-                {booking.hotelDetails.address}
-              </p>
-              {booking.hotelDetails.phone && (
-                <p className="text-gray-600 dark:text-gray-300">
-                  <span className="font-medium">Phone:</span>{" "}
-                  {booking.hotelDetails.phone}
-                </p>
-              )}
-              {booking.hotelDetails.email && (
-                <p className="text-gray-600 dark:text-gray-300">
-                  <span className="font-medium">Email:</span>{" "}
-                  {booking.hotelDetails.email}
-                </p>
-              )}
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={mapPinIcon}
+                    alt="Location"
+                    className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                  />
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {booking.hotelDetails.address}
+                  </p>
+                </div>
+                {booking.hotelDetails.phone && (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={phoneIcon}
+                      alt="Phone"
+                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    <a
+                      href={`tel:${booking.hotelDetails.phone}`}
+                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary-dark"
+                    >
+                      {booking.hotelDetails.phone}
+                    </a>
+                  </div>
+                )}
+                {booking.hotelDetails.email && (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={emailIcon}
+                      alt="Email"
+                      className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                    />
+                    <a
+                      href={`mailto:${booking.hotelDetails.email}`}
+                      className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary-dark"
+                    >
+                      {booking.hotelDetails.email}
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>

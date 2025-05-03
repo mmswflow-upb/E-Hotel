@@ -3,9 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useLoading } from "../contexts/LoadingContext";
-import roomIcon from "../assets/room.png";
-import bedRoomIcon from "../assets/bed-room.png";
-import doubleBedRoomIcon from "../assets/double-bed-room.png";
+import RoomCard from "../components/RoomCard";
+import HotelHeader from "../components/HotelHeader";
 
 // Import local icons
 import mapPinIcon from "../assets/map-pin.png";
@@ -154,280 +153,61 @@ export default function HotelRooms() {
     }
   }
 
-  const RoomCard = ({ room }) => {
-    const ciDate = new Date(ci);
-    const coDate = new Date(co);
-    const nights = Math.ceil((coDate - ciDate) / (1000 * 60 * 60 * 24));
-    const totalPrice = room.pricePerNight * nights;
-    const canAfford = userAccount?.balance >= totalPrice;
-    const balanceDifference = userAccount?.balance - totalPrice;
-
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Room {room.roomNumber}
-            </h3>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                room.status === "available"
-                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                  : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-              }`}
-            >
-              {room.status}
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-              <img
-                src={
-                  room.type.toLowerCase().includes("double")
-                    ? doubleBedRoomIcon
-                    : bedRoomIcon
-                }
-                alt={room.type}
-                className="h-6 w-6 dark:invert dark:brightness-0 dark:opacity-80"
-              />
-              <span className="font-medium">Type:</span> {room.type}
-            </div>
-            <p className="text-gray-600 dark:text-gray-300">
-              <span className="font-medium">Price per night:</span> $
-              {room.pricePerNight}
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              <span className="font-medium">Total for {nights} nights:</span> $
-              {totalPrice}
-            </p>
-            <div
-              className={`mt-2 p-2 rounded-md ${
-                canAfford
-                  ? "bg-green-50 dark:bg-green-900/20"
-                  : "bg-yellow-50 dark:bg-yellow-900/20"
-              }`}
-            >
-              <p
-                className={`text-sm ${
-                  canAfford
-                    ? "text-green-700 dark:text-green-300"
-                    : "text-yellow-700 dark:text-yellow-300"
-                }`}
-              >
-                <span className="font-medium">Your balance:</span> $
-                {userAccount?.balance || 0}
-                {!canAfford && (
-                  <span className="block mt-1">
-                    You need ${Math.abs(balanceDifference).toFixed(2)} more to
-                    book this room
-                  </span>
-                )}
-                {canAfford && (
-                  <span className="block mt-1">
-                    You'll have ${balanceDifference.toFixed(2)} remaining after
-                    booking
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          {room.status === "available" && (
-            <button
-              onClick={() => book(room.roomNumber)}
-              className={`w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50 transition-colors duration-200`}
-            >
-              {canAfford ? "Book Now" : "Book with Insufficient Balance"}
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const HotelHeader = () => {
-    if (!hotel) return null;
-
-    const getServiceIcon = (serviceName) => {
-      const iconMap = {
-        WiFi: wifiIcon,
-        Breakfast: restaurantIcon,
-        "Pool Access": poolIcon,
-        Spa: hotelIcon,
-        Parking: hotelIcon,
-        "Room Service": restaurantIcon,
-        "Gym Access": hotelIcon,
-        Laundry: hotelIcon,
-      };
-      return iconMap[serviceName] || hotelIcon;
-    };
-
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 mb-8">
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {hotel.name}
-            </h1>
-
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, index) => (
-                <span
-                  key={index}
-                  className={`text-xl ${
-                    index < hotel.starRating
-                      ? "text-yellow-400"
-                      : "text-gray-300 dark:text-gray-600"
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
-              <span className="ml-2 text-gray-600 dark:text-gray-300">
-                ({hotel.starRating})
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-              <img
-                src={mapPinIcon}
-                alt="Location"
-                className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-              />
-              <p>{hotel.address}</p>
-            </div>
-
-            {hotel.phone && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <img
-                  src={phoneIcon}
-                  alt="Phone"
-                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-                />
-                <p>{hotel.phone}</p>
-              </div>
-            )}
-
-            {hotel.email && (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                <img
-                  src={emailIcon}
-                  alt="Email"
-                  className="w-5 h-5 dark:invert dark:brightness-0 dark:opacity-80"
-                />
-                <p>{hotel.email}</p>
-              </div>
-            )}
-          </div>
-
-          <p className="text-gray-700 dark:text-gray-300">
-            {hotel.description}
-          </p>
-
-          {/* Services Section */}
-          {hotel.availableServices && hotel.availableServices.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Available Services
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {hotel.availableServices.map((service) => (
-                  <div
-                    key={service.serviceID}
-                    className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                  >
-                    <img
-                      src={getServiceIcon(service.name)}
-                      alt={service.name}
-                      className="w-6 h-6 mt-1 dark:invert dark:brightness-0 dark:opacity-80"
-                    />
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {service.name}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {service.description}
-                      </p>
-                      <p className="text-sm font-medium text-primary dark:text-primary-dark">
-                        ${service.cost}{" "}
-                        {service.isOneTime ? "one-time" : "per use"}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <HotelHeader />
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center space-x-2">
-            <img
-              src={roomIcon}
-              alt="Rooms"
-              className="h-8 w-8 dark:invert dark:brightness-0 dark:opacity-80"
-            />
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-              Available Rooms
-            </h2>
-          </div>
-        </div>
+        {err && <p className="text-red-500 text-center mb-6">{err}</p>}
+        {msg && <p className="text-green-500 text-center mb-6">{msg}</p>}
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+        <HotelHeader hotel={hotel} />
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Check-in
+                Check-in Date
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={ci}
-                  onChange={(e) => updateDates(e.target.value, co)}
-                  min={today}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert"
-                />
-              </div>
+              <input
+                type="date"
+                value={ci}
+                onChange={(e) => updateDates(e.target.value, co)}
+                min={today}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+              />
             </div>
-            <div>
+            <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Check-out
+                Check-out Date
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={co}
-                  onChange={(e) => updateDates(ci, e.target.value)}
-                  min={ci}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 [&::-webkit-calendar-picker-indicator]:invert-0 dark:[&::-webkit-calendar-picker-indicator]:invert"
-                />
-              </div>
+              <input
+                type="date"
+                value={co}
+                onChange={(e) => updateDates(ci, e.target.value)}
+                min={ci}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
+              />
             </div>
             <div className="flex items-end">
               <button
                 onClick={fetchRooms}
-                className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50 transition-colors duration-200"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark"
               >
-                Update Availability
+                Search Rooms
               </button>
             </div>
           </div>
         </div>
 
-        {err && <p className="text-red-500 text-center mb-4">{err}</p>}
-        {msg && <p className="text-green-500 text-center mb-4">{msg}</p>}
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => (
-            <RoomCard key={room.roomNumber} room={room} />
+            <RoomCard
+              key={room.roomNumber}
+              room={room}
+              userAccount={userAccount}
+              ci={ci}
+              co={co}
+              onBook={book}
+            />
           ))}
         </div>
       </div>
