@@ -10,7 +10,13 @@ class InvoiceController {
       }
       return new Invoice({ invoiceID: doc.id, ...doc.data() });
     } catch (error) {
-      throw new Error(`Error fetching invoice: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 500,
+        message: `Error fetching invoice: ${error.message}`,
+      };
     }
   }
 
@@ -25,7 +31,13 @@ class InvoiceController {
         (doc) => new Invoice({ invoiceID: doc.id, ...doc.data() })
       );
     } catch (error) {
-      throw new Error(`Error fetching booking invoices: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 500,
+        message: `Error fetching booking invoices: ${error.message}`,
+      };
     }
   }
 
@@ -40,7 +52,13 @@ class InvoiceController {
         (doc) => new Invoice({ invoiceID: doc.id, ...doc.data() })
       );
     } catch (error) {
-      throw new Error(`Error fetching hotel invoices: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 500,
+        message: `Error fetching hotel invoices: ${error.message}`,
+      };
     }
   }
 
@@ -49,7 +67,13 @@ class InvoiceController {
       const docRef = await db.collection("invoices").add(invoiceData);
       return new Invoice({ invoiceID: docRef.id, ...invoiceData });
     } catch (error) {
-      throw new Error(`Error creating invoice: ${error.message}`);
+      if (error.message.includes("already exists")) {
+        throw { status: 409, message: error.message };
+      }
+      throw {
+        status: 400,
+        message: `Error creating invoice: ${error.message}`,
+      };
     }
   }
 
@@ -58,7 +82,13 @@ class InvoiceController {
       await db.collection("invoices").doc(invoiceID).update(invoiceData);
       return new Invoice({ invoiceID, ...invoiceData });
     } catch (error) {
-      throw new Error(`Error updating invoice: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 400,
+        message: `Error updating invoice: ${error.message}`,
+      };
     }
   }
 
@@ -91,7 +121,13 @@ class InvoiceController {
       const invoice = await this.getInvoiceById(invoiceID);
       return new Invoice({ ...invoice, status });
     } catch (error) {
-      throw new Error(`Error updating invoice status: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 400,
+        message: `Error updating invoice status: ${error.message}`,
+      };
     }
   }
 }

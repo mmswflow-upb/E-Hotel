@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
+import waitingIcon from "../assets/waiting.png";
 
 export default function BookingCard({ booking }) {
   return (
@@ -72,11 +73,23 @@ export default function BookingCard({ booking }) {
             <span className="font-medium">Payment Status:</span>
             <img
               src={
-                booking.paymentStatus === "approved" ? approvedIcon : deniedIcon
+                booking.paymentStatus === "approved" ||
+                booking.paymentStatus === "refunded" ||
+                booking.paymentStatus === "Paid Penalties"
+                  ? approvedIcon
+                  : booking.paymentStatus === "waiting"
+                  ? waitingIcon
+                  : deniedIcon
               }
               alt={booking.paymentStatus}
               className={`h-5 w-5 ${
-                booking.paymentStatus === "approved"
+                booking.paymentStatus === "pending" ||
+                booking.paymentStatus === "insufficient_funds" ||
+                booking.paymentStatus === "waiting"
+                  ? "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
+                  : booking.paymentStatus === "approved" ||
+                    booking.paymentStatus === "refunded" ||
+                    booking.paymentStatus === "Paid Penalties"
                   ? ""
                   : "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
               }`}
@@ -85,12 +98,19 @@ export default function BookingCard({ booking }) {
               className={`px-2 py-1 rounded text-sm ${
                 booking.paymentStatus === "pending"
                   ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                  : booking.paymentStatus === "approved"
+                  : booking.paymentStatus === "insufficient_funds" ||
+                    booking.paymentStatus === "waiting"
+                  ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                  : booking.paymentStatus === "approved" ||
+                    booking.paymentStatus === "refunded" ||
+                    booking.paymentStatus === "Paid Penalties"
                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                   : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
               }`}
             >
-              {booking.paymentStatus}
+              {booking.paymentStatus === "insufficient_funds"
+                ? "Insufficient Funds"
+                : booking.paymentStatus}
             </span>
           </p>
         </div>

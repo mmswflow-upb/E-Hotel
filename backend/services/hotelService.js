@@ -67,76 +67,55 @@ exports.createHotel = async ({
   return new Hotel({ hotelID: d.id, ...d.data() });
 };
 
+exports.getHotels = async () => {
+  try {
+    const snap = await hotelsCol.get();
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return new Hotel({
+        hotelID: d.id,
+        name: data.name,
+        address: data.address,
+        starRating: data.starRating,
+        phone: data.phone || "",
+        email: data.email || "",
+      });
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+exports.getServiceById = async (serviceId) => {
+  try {
+    const doc = await servicesCol.doc(serviceId).get();
+    if (!doc.exists) throw new Error("Service not found");
+    const data = doc.data();
+    return new Service({
+      serviceID: doc.id,
+      name: data.name,
+      description: data.description,
+      price: data.price,
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 exports.getHotelById = async (hotelId) => {
   try {
     const doc = await hotelsCol.doc(hotelId).get();
-    if (!doc.exists) {
-      return null;
-    }
+    if (!doc.exists) throw new Error("Hotel not found");
     const data = doc.data();
-
-    // Create the hotel object
-    const hotel = new Hotel({
+    return new Hotel({
       hotelID: doc.id,
-      name: data.name || "Unnamed Hotel",
-      starRating: data.starRating || 0,
-      address: data.address || "No address",
-      totalRooms: data.totalRooms || 0,
-      description: data.description || "",
+      name: data.name,
+      address: data.address,
+      starRating: data.starRating,
       phone: data.phone || "",
       email: data.email || "",
-      amenities: data.amenities || [],
-      image: data.image || null,
-      serviceIDs: data.availableServiceIDs || [],
     });
-
-    // Fetch services using the hotel's availableServiceIDs
-    const availableServices = [];
-    if (hotel.serviceIDs.length > 0) {
-      const servicePromises = hotel.serviceIDs.map(async (serviceId) => {
-        try {
-          const serviceDoc = await servicesCol.doc(serviceId).get();
-          if (serviceDoc.exists) {
-            const serviceData = serviceDoc.data();
-            return new Service({
-              serviceID: serviceDoc.id,
-              name: serviceData.name,
-              cost: serviceData.cost,
-              isOneTime: serviceData.isOneTime,
-              description: serviceData.description,
-            });
-          }
-          console.warn(`Service with ID ${serviceId} not found`);
-          return null;
-        } catch (error) {
-          console.error(`Error fetching service ${serviceId}:`, error);
-          return null;
-        }
-      });
-
-      // Wait for all service fetches to complete and filter out any null results
-      const serviceResults = await Promise.all(servicePromises);
-      availableServices.push(
-        ...serviceResults.filter((service) => service !== null)
-      );
-    }
-
-    // Return the hotel data with availableServices
-    return {
-      hotelID: hotel.hotelID,
-      name: hotel.name,
-      starRating: hotel.starRating,
-      address: hotel.address,
-      totalRooms: hotel.totalRooms,
-      description: hotel.description,
-      phone: hotel.phone,
-      email: hotel.email,
-      amenities: hotel.amenities,
-      image: hotel.image,
-      availableServices: availableServices,
-    };
   } catch (error) {
-    console.error("Error fetching hotel by ID:", error);
     throw error;
   }
 };

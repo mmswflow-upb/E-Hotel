@@ -7,9 +7,11 @@ import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
+import waitingIcon from "../assets/waiting.png";
 import mapPinIcon from "../assets/map-pin.png";
 import phoneIcon from "../assets/phone-call.png";
 import emailIcon from "../assets/email.png";
+import ErrorToast from "../components/ErrorToast";
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
@@ -94,19 +96,25 @@ export default function BookingDetail() {
 
       await api.post(`/hotels/${hotelId}/bookings/${bookingId}/cancel`);
       setBooking({ ...booking, status: "canceled" });
-      setMsg("Canceled.");
+      setMsg("Booking cancelled successfully.");
     } catch (e) {
-      setErr(e.message);
+      if (e.response?.data?.error?.includes("Insufficient funds")) {
+        setErr(
+          "Unable to cancel booking: You need to have sufficient funds to cover the cancellation penalty. Please add more funds to your account or contact support."
+        );
+      } else {
+        setErr(e.response?.data?.error || e.message);
+      }
     } finally {
       hideLoading();
     }
   }
 
-  if (err) return <p className="text-red-500 text-center">{err}</p>;
   if (!booking) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={err} onClose={() => setErr("")} />
       <div className="max-w-7xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6">
           <div className="flex justify-between items-center mb-4">
@@ -243,15 +251,23 @@ export default function BookingDetail() {
                 <span className="font-medium">Payment Status:</span>
                 <img
                   src={
-                    booking.paymentStatus === "approved"
+                    booking.paymentStatus === "approved" ||
+                    booking.paymentStatus === "refunded" ||
+                    booking.paymentStatus === "Paid Penalties"
                       ? approvedIcon
+                      : booking.paymentStatus === "waiting"
+                      ? waitingIcon
                       : deniedIcon
                   }
                   alt={booking.paymentStatus}
                   className={`h-5 w-5 ${
-                    booking.paymentStatus === "pending"
+                    booking.paymentStatus === "pending" ||
+                    booking.paymentStatus === "insufficient_funds" ||
+                    booking.paymentStatus === "waiting"
                       ? "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
-                      : booking.paymentStatus === "approved"
+                      : booking.paymentStatus === "approved" ||
+                        booking.paymentStatus === "refunded" ||
+                        booking.paymentStatus === "Paid Penalties"
                       ? ""
                       : "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
                   }`}
@@ -260,12 +276,19 @@ export default function BookingDetail() {
                   className={`px-2 py-1 rounded text-sm ${
                     booking.paymentStatus === "pending"
                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                      : booking.paymentStatus === "approved"
+                      : booking.paymentStatus === "insufficient_funds" ||
+                        booking.paymentStatus === "waiting"
+                      ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                      : booking.paymentStatus === "approved" ||
+                        booking.paymentStatus === "refunded" ||
+                        booking.paymentStatus === "Paid Penalties"
                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   }`}
                 >
-                  {booking.paymentStatus}
+                  {booking.paymentStatus === "insufficient_funds"
+                    ? "Insufficient Funds"
+                    : booking.paymentStatus}
                 </span>
               </p>
             </div>

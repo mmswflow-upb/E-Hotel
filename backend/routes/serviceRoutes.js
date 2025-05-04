@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const ServiceController = require("../controllers/serviceController");
 const { authenticateToken, authorizeRole } = require("../middleware/auth");
+const role = require("../middleware/role");
 
 // Get all services
 router.get("/", authenticateToken, async (req, res) => {
@@ -9,7 +10,11 @@ router.get("/", authenticateToken, async (req, res) => {
     const services = await ServiceController.getAllServices();
     res.json(services);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
@@ -21,7 +26,11 @@ router.get("/:serviceID", authenticateToken, async (req, res) => {
     );
     res.json(service);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
@@ -35,7 +44,11 @@ router.post(
       const service = await ServiceController.createService(req.body);
       res.status(201).json(service);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );
@@ -53,7 +66,11 @@ router.put(
       );
       res.json(service);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );
@@ -70,7 +87,58 @@ router.delete(
       );
       res.json(result);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
+);
+
+// Create service - HotelManager/SystemAdmin only
+router.post("/", role("HotelManager", "SystemAdmin"), async (req, res) => {
+  try {
+    await ServiceController.create(req, res);
+  } catch (error) {
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+});
+
+// Update service - HotelManager/SystemAdmin only
+router.put(
+  "/:serviceID",
+  role("HotelManager", "SystemAdmin"),
+  async (req, res) => {
+    try {
+      await ServiceController.update(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
+);
+
+// Delete service - HotelManager/SystemAdmin only
+router.delete(
+  "/:serviceID",
+  role("HotelManager", "SystemAdmin"),
+  async (req, res) => {
+    try {
+      await ServiceController.delete(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );

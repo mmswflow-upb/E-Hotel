@@ -18,8 +18,7 @@ module.exports = async (req, res, next) => {
       managedHotelIds: decoded.managedHotelIds || [],
     };
     next();
-  } catch (err) {
-    console.error("Auth error:", err);
-    res.status(401).json({ error: "Unauthorized" });
+  } catch (error) {
+    throw error;
   }
 };

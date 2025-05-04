@@ -1,13 +1,31 @@
 const svc = require("../services/receptionistService");
 
 exports.getMe = async (req, res) => {
-  const data = await svc.get(req.user.uid);
-  res.json(data || {});
+  try {
+    const data = await svc.get(req.user.uid);
+    res.json(data || {});
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
 };
 
 exports.upsertMe = async (req, res) => {
-  const saved = await svc.upsert(req.user.uid, req.body);
-  res.json(saved);
+  try {
+    const saved = await svc.upsert(req.user.uid, req.body);
+    res.json(saved);
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes("already exists")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
+  }
 };
 
 exports.createBooking = async (req, res) => {
@@ -22,21 +40,59 @@ exports.createBooking = async (req, res) => {
     });
     res.status(201).json(booking);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("not found")) {
+      res.status(404).json({ error: e.message });
+    } else if (e.message.includes("insufficient")) {
+      res.status(402).json({ error: e.message });
+    } else if (e.message.includes("unavailable")) {
+      res.status(409).json({ error: e.message });
+    } else {
+      res.status(400).json({ error: e.message });
+    }
   }
 };
 
-exports.cancel = (req, res) =>
-  svc
-    .updateBookingStatus(req.params.bookingId, "canceled")
-    .then(() => res.sendStatus(204));
+exports.cancel = async (req, res) => {
+  try {
+    await svc.updateBookingStatus(req.params.bookingId, "canceled");
+    res.sendStatus(204);
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes("cannot cancel")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
+  }
+};
 
-exports.checkIn = (req, res) =>
-  svc
-    .updateBookingStatus(req.params.bookingId, "occupied")
-    .then(() => res.sendStatus(204));
+exports.checkIn = async (req, res) => {
+  try {
+    await svc.updateBookingStatus(req.params.bookingId, "occupied");
+    res.sendStatus(204);
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes("cannot check in")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
+  }
+};
 
-exports.checkOut = (req, res) =>
-  svc
-    .updateBookingStatus(req.params.bookingId, "completed")
-    .then(() => res.sendStatus(204));
+exports.checkOut = async (req, res) => {
+  try {
+    await svc.updateBookingStatus(req.params.bookingId, "completed");
+    res.sendStatus(204);
+  } catch (error) {
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else if (error.message.includes("cannot check out")) {
+      res.status(409).json({ error: error.message });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
+  }
+};

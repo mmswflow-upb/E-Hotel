@@ -15,7 +15,11 @@ router.get("/:invoiceID", async (req, res) => {
     );
     res.json(invoice);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
@@ -27,7 +31,11 @@ router.get("/booking/:bookingID", async (req, res) => {
     );
     res.json(invoices);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
@@ -42,7 +50,11 @@ router.get(
       );
       res.json(invoices);
     } catch (error) {
-      res.status(404).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );
@@ -53,7 +65,11 @@ router.post("/", role(["HotelManager", "Receptionist"]), async (req, res) => {
     const invoice = await InvoiceController.createInvoice(req.body);
     res.status(201).json(invoice);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
@@ -69,7 +85,11 @@ router.put(
       );
       res.json(invoice);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );
@@ -86,7 +106,11 @@ router.post(
       );
       res.json(invoice);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );
@@ -103,7 +127,11 @@ router.put(
       );
       res.json(invoice);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
     }
   }
 );

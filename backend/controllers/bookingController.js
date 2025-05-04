@@ -15,7 +15,15 @@ exports.create = async (req, res) => {
     });
     res.status(201).json(bk);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("not found")) {
+      res.status(404).json({ error: e.message });
+    } else if (e.message.includes("insufficient")) {
+      res.status(402).json({ error: e.message });
+    } else if (e.message.includes("unavailable")) {
+      res.status(409).json({ error: e.message });
+    } else {
+      res.status(400).json({ error: e.message });
+    }
   }
 };
 
@@ -50,7 +58,15 @@ exports.cancel = async (req, res) => {
     });
     res.json(rec);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("not found")) {
+      res.status(404).json({ error: e.message });
+    } else if (e.message.includes("insufficient")) {
+      res.status(402).json({ error: e.message });
+    } else if (e.message.includes("cannot cancel")) {
+      res.status(409).json({ error: e.message });
+    } else {
+      res.status(400).json({ error: e.message });
+    }
   }
 };
 
@@ -112,12 +128,41 @@ exports.createCustomer = async (req, res) => {
 
 exports.cancelCustomer = async (req, res) => {
   try {
-    const booking = await bookingSvc.cancelBooking(req.params.bookingId, {
+    const booking = await bookingSvc.getBookingById(req.params.bookingId, {
       customerId: req.user.id,
     });
-    res.json(booking);
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    const bookingDoc = await db
+      .collection("bookings")
+      .doc(req.params.bookingId)
+      .get();
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    const bookingData = bookingDoc.data();
+
+    const result = await bookingSvc.cancelBooking({
+      hotelId: bookingData.hotelID,
+      bookingID: req.params.bookingId,
+      canceledBy: req.user.uid,
+    });
+
+    if (result.error) {
+      if (result.error.includes("insufficient")) {
+        return res.status(402).json({ error: result.error });
+      } else if (result.error.includes("cannot cancel")) {
+        return res.status(409).json({ error: result.error });
+      }
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.status(200).json(result);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    res.status(500).json({ error: e.message });
   }
 };
 
@@ -141,12 +186,38 @@ exports.createReceptionist = async (req, res) => {
 
 exports.cancelReceptionist = async (req, res) => {
   try {
-    const booking = await bookingSvc.cancelBooking(req.params.bookingId, {
+    // First get the booking to verify hotelId
+    const booking = await bookingSvc.getBookingById(req.params.bookingId, {
       staffId: req.user.id,
     });
-    res.json(booking);
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Get the raw booking data from Firestore to access hotelID
+    const bookingDoc = await db
+      .collection("bookings")
+      .doc(req.params.bookingId)
+      .get();
+    if (!bookingDoc.exists) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+    const bookingData = bookingDoc.data();
+
+    const result = await bookingSvc.cancelBooking({
+      hotelId: bookingData.hotelID,
+      bookingID: req.params.bookingId,
+      canceledBy: req.user.uid,
+    });
+
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.status(200).json(result);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    res.status(500).json({ error: e.message });
   }
 };
 
@@ -154,6 +225,13 @@ exports.createBooking = async (req, res) => {
   try {
     const result = await bookingSvc.createBooking(req.body);
     if (result.error) {
+      if (result.error.includes("not found")) {
+        return res.status(404).json({ error: result.error });
+      } else if (result.error.includes("insufficient")) {
+        return res.status(402).json({ error: result.error });
+      } else if (result.error.includes("unavailable")) {
+        return res.status(409).json({ error: result.error });
+      }
       return res.status(400).json({ error: result.error });
     }
     res.status(201).json(result);

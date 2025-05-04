@@ -10,13 +10,33 @@ router.use(auth);
 router.post(
   "/hotels/:hotelId/bookings",
   role("Receptionist", "SystemAdmin"),
-  ctl.createBooking
+  async (req, res) => {
+    try {
+      await ctl.createBooking(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 );
 
 router.post(
   "/bookings/:bookingId/checkin",
   role("Receptionist", "SystemAdmin"),
-  ctl.checkIn
+  async (req, res) => {
+    try {
+      await ctl.checkIn(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 );
 
 module.exports = router;

@@ -45,6 +45,5 @@ try {
 
   module.exports = { admin, db };
 } catch (error) {
-  console.error("❌ Firebase initialization error:", error);
   throw error;
 }

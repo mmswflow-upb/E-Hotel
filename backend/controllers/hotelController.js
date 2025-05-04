@@ -29,8 +29,11 @@ exports.getHotelById = async (req, res) => {
     }
     res.json(hotel);
   } catch (error) {
-    console.error("Error fetching hotel:", error);
-    res.status(500).json({ error: "Error fetching hotel details" });
+    if (error.message.includes("not found")) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 
@@ -39,6 +42,10 @@ exports.create = async (req, res) => {
     const h = await hotelSvc.createHotel(req.body);
     res.status(201).json(h);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("already exists")) {
+      res.status(409).json({ error: e.message });
+    } else {
+      res.status(400).json({ error: e.message });
+    }
   }
 };

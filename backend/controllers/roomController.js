@@ -10,7 +10,13 @@ exports.list = async (req, res) => {
     });
     res.json(rooms);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("not found")) {
+      res.status(404).json({ error: e.message });
+    } else if (e.message.includes("invalid date")) {
+      res.status(400).json({ error: e.message });
+    } else {
+      res.status(500).json({ error: e.message });
+    }
   }
 };
 
@@ -23,6 +29,12 @@ exports.create = async (req, res) => {
     });
     res.status(201).json(room);
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    if (e.message.includes("not found")) {
+      res.status(404).json({ error: e.message });
+    } else if (e.message.includes("already exists")) {
+      res.status(409).json({ error: e.message });
+    } else {
+      res.status(400).json({ error: e.message });
+    }
   }
 };

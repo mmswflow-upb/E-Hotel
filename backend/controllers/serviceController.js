@@ -9,7 +9,10 @@ class ServiceController {
         (doc) => new Service({ serviceID: doc.id, ...doc.data() })
       );
     } catch (error) {
-      throw new Error(`Error fetching services: ${error.message}`);
+      throw {
+        status: 500,
+        message: `Error fetching services: ${error.message}`,
+      };
     }
   }
 
@@ -17,11 +20,15 @@ class ServiceController {
     try {
       const doc = await db.collection("services").doc(serviceID).get();
       if (!doc.exists) {
-        throw new Error("Service not found");
+        throw { status: 404, message: "Service not found" };
       }
       return new Service({ serviceID: doc.id, ...doc.data() });
     } catch (error) {
-      throw new Error(`Error fetching service: ${error.message}`);
+      if (error.status) throw error;
+      throw {
+        status: 500,
+        message: `Error fetching service: ${error.message}`,
+      };
     }
   }
 
@@ -29,7 +36,7 @@ class ServiceController {
     try {
       const hotelDoc = await db.collection("hotels").doc(hotelID).get();
       if (!hotelDoc.exists) {
-        throw new Error("Hotel not found");
+        throw { status: 404, message: "Hotel not found" };
       }
 
       const hotel = hotelDoc.data();
@@ -46,7 +53,11 @@ class ServiceController {
 
       return services;
     } catch (error) {
-      throw new Error(`Error fetching hotel services: ${error.message}`);
+      if (error.status) throw error;
+      throw {
+        status: 500,
+        message: `Error fetching hotel services: ${error.message}`,
+      };
     }
   }
 
@@ -55,7 +66,13 @@ class ServiceController {
       const docRef = await db.collection("services").add(serviceData);
       return new Service({ serviceID: docRef.id, ...serviceData });
     } catch (error) {
-      throw new Error(`Error creating service: ${error.message}`);
+      if (error.message.includes("already exists")) {
+        throw { status: 409, message: error.message };
+      }
+      throw {
+        status: 400,
+        message: `Error creating service: ${error.message}`,
+      };
     }
   }
 
@@ -64,7 +81,13 @@ class ServiceController {
       await db.collection("services").doc(serviceID).update(serviceData);
       return new Service({ serviceID, ...serviceData });
     } catch (error) {
-      throw new Error(`Error updating service: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 400,
+        message: `Error updating service: ${error.message}`,
+      };
     }
   }
 
@@ -73,7 +96,13 @@ class ServiceController {
       await db.collection("services").doc(serviceID).delete();
       return { message: "Service deleted successfully" };
     } catch (error) {
-      throw new Error(`Error deleting service: ${error.message}`);
+      if (error.message.includes("not found")) {
+        throw { status: 404, message: error.message };
+      }
+      throw {
+        status: 500,
+        message: `Error deleting service: ${error.message}`,
+      };
     }
   }
 }

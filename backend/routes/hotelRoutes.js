@@ -20,28 +20,55 @@ router.param("hotelId", (req, res, next, hotelId) => {
 });
 
 // List hotels with role-based access
-router.get("/", (req, res, next) => {
-  const userRole = req.user.role;
-
-  switch (userRole) {
-    case "SystemAdmin":
-      return hotelCtrl.listAll(req, res, next);
-    case "HotelManager":
-      return hotelCtrl.listManaged(req, res, next);
-    case "Receptionist":
-      return hotelCtrl.listAssigned(req, res, next);
-    case "Customer":
-      return hotelCtrl.listAll(req, res, next);
-    default:
-      return res.status(401).json({ error: "Unauthorized" });
+router.get("/", async (req, res) => {
+  try {
+    const userRole = req.user.role;
+    switch (userRole) {
+      case "SystemAdmin":
+        return await hotelCtrl.listAll(req, res);
+      case "HotelManager":
+        return await hotelCtrl.listManaged(req, res);
+      case "Receptionist":
+        return await hotelCtrl.listAssigned(req, res);
+      case "Customer":
+        return await hotelCtrl.listAll(req, res);
+      default:
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+  } catch (error) {
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
 // Get single hotel by ID
-router.get("/:hotelId", hotelCtrl.getHotelById);
+router.get("/:hotelId", async (req, res) => {
+  try {
+    await hotelCtrl.getHotelById(req, res);
+  } catch (error) {
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+});
 
 // Create hotel - SystemAdmin only
-router.post("/", role("SystemAdmin"), hotelCtrl.create);
+router.post("/", role("SystemAdmin"), async (req, res) => {
+  try {
+    await hotelCtrl.create(req, res);
+  } catch (error) {
+    if (error.status) {
+      res.status(error.status).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+});
 
 // Hotel-scoped routes
 router.use("/:hotelId/rooms", roomRoutes);

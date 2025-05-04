@@ -13,12 +13,33 @@ router.use(auth);
 router.get(
   "/",
   role("Receptionist", "HotelManager", "SystemAdmin"),
-  custCtrl.list
+  async (req, res) => {
+    try {
+      await custCtrl.list(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 );
+
 router.get(
   "/:customerID",
   role("Receptionist", "HotelManager", "SystemAdmin"),
-  custCtrl.getById
+  async (req, res) => {
+    try {
+      await custCtrl.getById(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 );
 
 module.exports = router;

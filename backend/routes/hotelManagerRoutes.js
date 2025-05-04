@@ -10,8 +10,33 @@ router.use(auth);
 router.get(
   "/:hotelId/stats/monthly",
   role("HotelManager", "SystemAdmin"),
-  ctl.getMonthlyStats
+  async (req, res) => {
+    try {
+      await ctl.getMonthlyStats(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 );
-router.patch("/:hotelId", role("HotelManager", "SystemAdmin"), ctl.patchHotel);
+
+router.patch(
+  "/:hotelId",
+  role("HotelManager", "SystemAdmin"),
+  async (req, res) => {
+    try {
+      await ctl.patchHotel(req, res);
+    } catch (error) {
+      if (error.status) {
+        res.status(error.status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
+);
 
 module.exports = router;
