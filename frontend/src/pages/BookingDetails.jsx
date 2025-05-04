@@ -266,12 +266,12 @@ export default function BookingDetail() {
                     booking.paymentStatus === "pending" ||
                     booking.paymentStatus === "insufficient_funds" ||
                     booking.paymentStatus === "waiting"
-                      ? "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
+                      ? "dark:invert dark:brightness-0 dark:opacity-80"
                       : booking.paymentStatus === "approved" ||
                         booking.paymentStatus === "refunded" ||
                         booking.paymentStatus === "Paid Penalties"
                       ? ""
-                      : "filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
+                      : "dark:invert dark:brightness-0 dark:opacity-80"
                   }`}
                 />
                 <span

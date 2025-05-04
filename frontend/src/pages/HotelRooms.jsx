@@ -8,15 +8,6 @@ import HotelHeader from "../components/HotelHeader";
 import ErrorToast from "../components/ErrorToast";
 import SuccessToast from "../components/SuccessToast";
 
-// Import local icons
-import mapPinIcon from "../assets/map-pin.png";
-import wifiIcon from "../assets/wifi.png";
-import restaurantIcon from "../assets/restaurant.png";
-import poolIcon from "../assets/pool.png";
-import hotelIcon from "../assets/hotel.png";
-import phoneIcon from "../assets/phone-call.png";
-import emailIcon from "../assets/email.png";
-
 export default function HotelRooms() {
   const { hotelId } = useParams();
   const { user } = useAuth();
