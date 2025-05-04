@@ -308,7 +308,8 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
     if (!doc.exists) throw new Error("Booking not found");
     const data = doc.data();
     if (data.hotelID !== hotelId) throw new Error("Wrong hotel");
-    if (data.status !== "booked") throw new Error("Cannot cancel");
+    if (data.status !== "booked" && data.status !== "checked-in")
+      throw new Error("Cannot cancel");
 
     const now = new Date();
     const checkInDate = data.checkInDate.toDate();
@@ -335,7 +336,7 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
     // Start a transaction to ensure atomicity
     await db.runTransaction(async (transaction) => {
       // Update booking status
-      transaction.update(bookingsCol.doc(bookingID), { status: "canceled" });
+      transaction.update(bookingsCol.doc(bookingID), { status: "cancelled" });
 
       // Free rooms
       await Promise.all(
@@ -439,11 +440,11 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
         // Update booking payment status to Paid Penalties
         transaction.update(bookingsCol.doc(bookingID), {
           paymentStatus: "Paid Penalties",
-          status: "canceled",
+          status: "cancelled",
         });
       } else {
         // Update booking status only if no penalty
-        transaction.update(bookingsCol.doc(bookingID), { status: "canceled" });
+        transaction.update(bookingsCol.doc(bookingID), { status: "cancelled" });
       }
 
       // Log cancellation
@@ -479,7 +480,7 @@ exports.checkInBooking = async ({ hotelId, bookingID }) => {
     if (data.hotelID !== hotelId) return { error: "Wrong hotel" };
     if (data.status !== "booked") return { error: "Cannot check in" };
 
-    await bookingsCol.doc(bookingID).update({ status: "occupied" });
+    await bookingsCol.doc(bookingID).update({ status: "checked-in" });
     await Promise.all(
       data.roomDetails.map((rid) =>
         roomService.updateRoomStatus(rid, "occupied")
@@ -500,11 +501,11 @@ exports.checkOutBooking = async ({ hotelId, bookingID }) => {
     if (!doc.exists) return { error: "Booking not found" };
     const data = doc.data();
     if (data.hotelID !== hotelId) return { error: "Wrong hotel" };
-    if (data.status !== "occupied") return { error: "Cannot check out" };
+    if (data.status !== "checked-in") return { error: "Cannot check out" };
 
     const now = new Date();
     await bookingsCol.doc(bookingID).update({
-      status: "completed",
+      status: "checked-out",
       checkedOutAt: admin.firestore.Timestamp.fromDate(now),
     });
     // free rooms
@@ -686,23 +687,15 @@ exports.getBookingById = async (bookingId, { customerId, staffId } = {}) => {
 };
 
 exports.categorizeBookings = (bookings) => {
-  const now = new Date();
   return bookings.reduce(
     (acc, booking) => {
-      const checkInDate = new Date(booking.checkInDate);
-      const checkOutDate = new Date(booking.checkOutDate);
-
-      // If booking is cancelled, always put it in history
-      if (booking.status === "canceled") {
+      if (booking.status === "cancelled" || booking.status === "checked-out") {
         acc.history.push(booking);
-      } else if (checkOutDate < now) {
-        acc.history.push(booking);
-      } else if (checkInDate <= now && now <= checkOutDate) {
+      } else if (booking.status === "checked-in") {
         acc.active.push(booking);
-      } else {
+      } else if (booking.status === "booked") {
         acc.future.push(booking);
       }
-
       return acc;
     },
     { history: [], active: [], future: [] }

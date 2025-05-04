@@ -21,12 +21,12 @@ exports.monthlyStats = async (hotelId, year, month) => {
   const inPeriod = all.filter((b) => b.createdAt >= start && b.createdAt < end);
 
   const totalRevenue = inPeriod
-    .filter((b) => b.status === "completed")
+    .filter((b) => b.status === "checked-out")
     .reduce((sum, b) => sum + b.totalAmount, 0);
 
   const bookingsCount = inPeriod.length;
   const completedCount = inPeriod.filter(
-    (b) => b.status === "completed"
+    (b) => b.status === "checked-out"
   ).length;
   const occupancyRate = bookingsCount ? completedCount / bookingsCount : 0;
 

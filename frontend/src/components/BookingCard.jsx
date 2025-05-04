@@ -22,9 +22,9 @@ export default function BookingCard({ booking }) {
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 booking.status === "booked"
                   ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "occupied"
+                  : booking.status === "checked-in"
                   ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "completed"
+                  : booking.status === "checked-out"
                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                   : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
               }`}

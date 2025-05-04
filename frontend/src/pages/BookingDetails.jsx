@@ -127,9 +127,9 @@ export default function BookingDetail() {
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 booking.status === "booked"
                   ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "occupied"
+                  : booking.status === "checked-in"
                   ? "bg-primary text-white dark:bg-primary-dark"
-                  : booking.status === "completed"
+                  : booking.status === "checked-out"
                   ? "bg-primary text-white dark:bg-primary-dark"
                   : "bg-error text-white"
               }`}
@@ -297,7 +297,8 @@ export default function BookingDetail() {
           </div>
 
           <div className="mt-6 flex gap-4">
-            {booking.status === "booked" && (
+            {(booking.status === "booked" ||
+              booking.status === "checked-in") && (
               <button
                 onClick={cancel}
                 className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-error hover:bg-error-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error"

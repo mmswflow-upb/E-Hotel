@@ -10,7 +10,7 @@
  * @prop {Date=} checkedOutAt            // actual checkout timestamp
  * @prop {number} cancellationGracePeriod // in hours
  * @prop {number} totalAmount
- * @prop {string} status                 // booked, occupied, completed, canceled
+ * @prop {string} status                 // booked, checked-in, checked-out, cancelled
  * @prop {string} paymentStatus          // pending, approved, declined
  * @prop {boolean} hasInvoice
  * @prop {Date} createdAt

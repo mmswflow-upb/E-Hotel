@@ -248,155 +248,84 @@ async function seed() {
       const ci = new Date(now.getTime() + (i * 5 + b) * 864e5);
       const co = new Date(ci.getTime() + 2 * 864e5);
 
-      // Get room details for proper pricing
-      const room = await db.collection("rooms").doc(roomID).get();
-      const roomData = room.data();
-      const nights = Math.ceil((co - ci) / (1000 * 60 * 60 * 24));
-      const roomTotal = roomData.pricePerNight * nights;
-
-      // Create service requests for the booking
-      const hotel = await db.collection("hotels").doc(hotelID).get();
-      const availableServices = hotel.data().availableServiceIDs;
-
-      // More realistic service selection based on room type and stay duration
-      const selectedServices = availableServices
-        .sort(() => 0.5 - rand())
-        .slice(0, Math.floor(rand() * 3) + 1); // 1-3 services per booking
-
-      const serviceCharges = [];
-      for (const serviceID of selectedServices) {
-        const service = await db.collection("services").doc(serviceID).get();
-        const serviceData = service.data();
-
-        // More realistic service quantities based on stay duration
-        let quantity = 1;
-        if (!serviceData.isOneTime) {
-          // For daily services, use number of nights
-          quantity = nights;
-        }
-
-        const totalCost = serviceData.cost * quantity;
-
-        serviceCharges.push({
-          serviceID,
-          name: serviceData.name,
-          cost: serviceData.cost,
-          quantity,
-          total: totalCost,
-          unit: serviceData.isOneTime ? "one-time" : "per night",
-        });
+      // Determine booking status based on index
+      let status;
+      let checkedOutAt = null;
+      if (b === 0) {
+        status = "booked"; // First booking is booked
+      } else if (b === 1) {
+        status = "checked-in"; // Second booking is checked-in
+      } else if (b === 2) {
+        status = "checked-out"; // Third booking is checked-out
+        checkedOutAt = new Date(ci.getTime() + 1 * 864e5);
+      } else if (b === 3) {
+        status = "cancelled"; // Fourth booking is cancelled
+      } else {
+        status = "booked"; // Fifth booking is booked
       }
 
-      // Calculate total service cost
-      const totalServiceCost = serviceCharges.reduce(
-        (sum, charge) => sum + charge.total,
-        0
-      );
-
-      // Create booking first
+      const totalAmount = (b % 2 ? 100 : 150) * 2;
       const bookingID = await add("bookings", {
         hotelID,
         customerID: cust.uid,
         roomDetails: [roomID],
         checkInDate: admin.firestore.Timestamp.fromDate(ci),
         checkOutDate: admin.firestore.Timestamp.fromDate(co),
-        totalAmount: roomTotal + totalServiceCost,
-        status: "booked",
+        checkedOutAt: checkedOutAt
+          ? admin.firestore.Timestamp.fromDate(checkedOutAt)
+          : null,
+        totalAmount,
+        status,
         createdAt: admin.firestore.Timestamp.fromDate(ci),
         cancellationGracePeriod: 24,
+        paymentStatus: status === "cancelled" ? "refunded" : "approved",
       });
-      bookings.push({
+      bookings.push(bookingID);
+
+      // Create payment transaction
+      await add("paymentTransactions", {
         bookingID,
-        hotelID,
-        cust: cust.uid,
-        amount: roomTotal + totalServiceCost,
-      });
-
-      // Create service requests after booking is created
-      for (const serviceID of selectedServices) {
-        const service = await db.collection("services").doc(serviceID).get();
-        const serviceData = service.data();
-        let quantity = 1;
-        if (!serviceData.isOneTime) {
-          quantity = nights;
-        }
-        const totalCost = serviceData.cost * quantity;
-
-        await add("serviceRequests", {
-          hotelID,
-          bookingID,
-          serviceID,
-          roomID,
-          quantity,
-          totalCost,
-          status: "requested",
-          requestedAt: admin.firestore.Timestamp.fromDate(ci),
-          completedAt: admin.firestore.Timestamp.fromDate(co),
-        });
-      }
-
-      // Determine invoice status based on payment
-      const isPaid = rand() < 0.8; // 80% chance of being paid
-      const invoiceStatus = isPaid ? "Paid" : "Pending";
-
-      const invoiceID = await add("invoices", {
-        hotelID,
-        bookingID,
-        roomCharges: [
-          {
-            roomID,
-            roomNumber: roomData.roomNumber,
-            roomType: roomData.type,
-            pricePerNight: roomData.pricePerNight,
-            nights,
-            total: roomTotal,
-          },
-        ],
-        serviceCharges,
-        totalAmount: roomTotal + totalServiceCost,
-        issueDate: admin.firestore.Timestamp.fromDate(ci),
-        dueDate: admin.firestore.Timestamp.fromDate(co),
-        status: invoiceStatus,
+        amount: totalAmount,
         paymentMethod: "card",
+        transactionDate: admin.firestore.Timestamp.fromDate(ci),
+        status: status === "cancelled" ? "refunded" : "approved",
       });
 
-      // Create payment transaction if invoice is paid
-      if (isPaid) {
-        await add("paymentTransactions", {
+      // Create invoice for non-cancelled bookings
+      if (status !== "cancelled") {
+        await add("invoices", {
+          bookingID,
+          hotelID,
+          roomCharges: [
+            {
+              roomNumber: (hotelIDs.indexOf(hotelID) + 1) * 100 + b + 1,
+              total: totalAmount,
+              nights: 2,
+            },
+          ],
+          serviceCharges: [],
+          totalAmount,
+          issueDate: admin.firestore.Timestamp.fromDate(ci),
+          status: "Paid",
+        });
+      }
+
+      // Create cancellation record for cancelled bookings
+      if (status === "cancelled") {
+        await add("cancellations", {
           hotelID,
           bookingID,
-          invoiceID,
-          amount: roomTotal + totalServiceCost,
-          paymentMethod: "card",
-          transactionDate: admin.firestore.Timestamp.fromDate(ci),
-          status: "approved",
+          canceledBy: cust.uid,
+          cancellationTime: admin.firestore.Timestamp.fromDate(ci),
+          penaltyApplied: totalAmount * 0.5,
+          penaltyPaid: true,
+          refunded: true,
         });
       }
     }
   }
 
-  /* 5. cancellations */
-  console.log("✨ Cancellations");
-  for (const cust of customers) {
-    const mine = bookings.filter((b) => b.cust === cust.uid);
-    const n = rand() < 0.5 ? 2 : 3;
-    for (let i = 0; i < n; i++) {
-      const bk = mine[i];
-      await add("cancellations", {
-        hotelID: bk.hotelID,
-        bookingID: bk.bookingID,
-        canceledBy: cust.uid,
-        cancellationTime: admin.firestore.Timestamp.now(),
-        penaltyApplied: 50,
-      });
-      await db
-        .collection("bookings")
-        .doc(bk.bookingID)
-        .update({ status: "canceled" });
-    }
-  }
-
-  /* 6. stats */
+  /* 5. stats */
   console.log("✨ Monthly stats");
   const base = new Date();
   for (const hotelID of hotelIDs) {
