@@ -12,14 +12,15 @@ import mapPinIcon from "../assets/map-pin.png";
 import phoneIcon from "../assets/phone-call.png";
 import emailIcon from "../assets/email.png";
 import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
   const { showLoading, hideLoading } = useLoading();
   const [booking, setBooking] = useState(null);
   const [invoice, setInvoice] = useState(null);
-  const [msg, setMsg] = useState("");
-  const [err, setErr] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -58,7 +59,7 @@ export default function BookingDetail() {
           } catch {}
         }
       } catch (e) {
-        setErr(e.message);
+        setErrorMsg(e.message);
       } finally {
         hideLoading();
       }
@@ -66,8 +67,8 @@ export default function BookingDetail() {
   }, [bookingId]);
 
   async function cancel() {
-    setErr("");
-    setMsg("");
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
       showLoading();
       // First get all hotels
@@ -96,14 +97,14 @@ export default function BookingDetail() {
 
       await api.post(`/hotels/${hotelId}/bookings/${bookingId}/cancel`);
       setBooking({ ...booking, status: "canceled" });
-      setMsg("Booking cancelled successfully.");
+      setSuccessMsg("Booking cancelled successfully.");
     } catch (e) {
       if (e.response?.data?.error?.includes("Insufficient funds")) {
-        setErr(
+        setErrorMsg(
           "Unable to cancel booking: You need to have sufficient funds to cover the cancellation penalty. Please add more funds to your account or contact support."
         );
       } else {
-        setErr(e.response?.data?.error || e.message);
+        setErrorMsg(e.response?.data?.error || e.message);
       }
     } finally {
       hideLoading();
@@ -114,7 +115,8 @@ export default function BookingDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <ErrorToast message={err} onClose={() => setErr("")} />
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-7xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6">
           <div className="flex justify-between items-center mb-4">
@@ -317,7 +319,6 @@ export default function BookingDetail() {
               </Link>
             )}
           </div>
-          {msg && <p className="mt-4 text-green-500 text-center">{msg}</p>}
         </div>
       </div>
     </div>

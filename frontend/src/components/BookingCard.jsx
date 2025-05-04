@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
 import waitingIcon from "../assets/waiting.png";
+import ErrorToast from "./ErrorToast";
 
 export default function BookingCard({ booking }) {
+  const [errorMsg, setErrorMsg] = useState("");
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between items-center">

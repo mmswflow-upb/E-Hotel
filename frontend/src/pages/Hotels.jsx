@@ -6,11 +6,15 @@ import hotelIcon from "../assets/hotel.png";
 import roomIcon from "../assets/room.png";
 import phoneIcon from "../assets/phone-call.png";
 import emailIcon from "../assets/email.png";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function Hotels() {
   const [hotels, setHotels] = useState([]);
   const [err, setErr] = useState("");
   const { showLoading, hideLoading } = useLoading();
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     showLoading();
@@ -88,6 +92,8 @@ export default function Hotels() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center space-x-2">

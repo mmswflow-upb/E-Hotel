@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import loginIcon from "../assets/log-in.png";
+import { useLoading } from "../contexts/LoadingContext";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
-  const [err, setErr] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         navigate("/");
       }
@@ -22,16 +27,24 @@ export default function Login() {
 
   async function submit(e) {
     e.preventDefault();
-    setErr("");
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
+      showLoading();
       await signInWithEmailAndPassword(auth, email, pw);
+      setSuccessMsg("Login successful");
       navigate("/");
     } catch (e) {
-      setErr(e.message);
+      setErrorMsg(e.message);
+    } finally {
+      hideLoading();
     }
   }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
           <div className="flex items-center space-x-2">
@@ -65,7 +78,6 @@ export default function Login() {
               />
             </div>
           </div>
-          {err && <p className="text-red-500 text-sm text-center">{err}</p>}
           <div>
             <button
               type="submit"

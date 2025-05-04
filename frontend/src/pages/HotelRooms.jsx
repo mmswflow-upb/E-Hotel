@@ -5,6 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLoading } from "../contexts/LoadingContext";
 import RoomCard from "../components/RoomCard";
 import HotelHeader from "../components/HotelHeader";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 // Import local icons
 import mapPinIcon from "../assets/map-pin.png";
@@ -25,6 +27,8 @@ export default function HotelRooms() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [userAccount, setUserAccount] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   // date state
   const today = new Date().toISOString().split("T")[0];
@@ -153,8 +157,31 @@ export default function HotelRooms() {
     }
   }
 
+  async function updateRoomStatus(roomNumber, newStatus) {
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      showLoading();
+      await api.patch(`/hotels/${hotelId}/rooms/${roomNumber}`, {
+        status: newStatus,
+      });
+      setRooms((prev) =>
+        prev.map((r) =>
+          r.roomNumber === roomNumber ? { ...r, status: newStatus } : r
+        )
+      );
+      setSuccessMsg("Room status updated successfully");
+    } catch (e) {
+      setErrorMsg(e.message);
+    } finally {
+      hideLoading();
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-7xl mx-auto">
         {err && <p className="text-red-500 text-center mb-6">{err}</p>}
         {msg && <p className="text-green-500 text-center mb-6">{msg}</p>}

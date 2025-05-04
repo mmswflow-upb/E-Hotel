@@ -1,27 +1,30 @@
 import { useState, useEffect } from "react";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import api from "../lib/api";
 import { Link, useNavigate } from "react-router-dom";
 import registerIcon from "../assets/register.png";
+import { useLoading } from "../contexts/LoadingContext";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function Register() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
     name: "",
     phone: "",
     idType: "",
     idNumber: "",
   });
-  const [err, setErr] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         navigate("/");
       }
@@ -40,9 +43,16 @@ export default function Register() {
 
   async function submit(e) {
     e.preventDefault();
-    setErr("");
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMsg("Passwords do not match");
+      return;
+    }
+
     try {
-      // Create Firebase auth account
+      showLoading();
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -58,15 +68,19 @@ export default function Register() {
         balance: 0,
       });
 
-      // Redirect to login page
-      navigate("/login");
+      setSuccessMsg("Registration successful");
+      navigate("/");
     } catch (e) {
-      setErr(e.message);
+      setErrorMsg(e.message);
+    } finally {
+      hideLoading();
     }
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
           <div className="flex items-center space-x-2">
@@ -100,6 +114,17 @@ export default function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm Password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               />
@@ -152,13 +177,12 @@ export default function Register() {
               />
             </div>
           </div>
-          {err && <p className="text-red-500 text-sm text-center">{err}</p>}
           <div>
             <button
               type="submit"
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark"
             >
-              Create account
+              Register
             </button>
           </div>
         </form>

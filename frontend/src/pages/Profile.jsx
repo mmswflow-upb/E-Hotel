@@ -8,13 +8,15 @@ import idCardIcon from "../assets/id-card.png";
 import moneyIcon from "../assets/money.png";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function Profile() {
   const { role } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const [userData, setUserData] = useState({});
-  const [err, setErr] = useState("");
-  const [msg, setMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -23,7 +25,7 @@ export default function Profile() {
         const response = await api.get("/accounts/me");
         setUserData(response.data);
       } catch (e) {
-        setErr(e.message);
+        setErrorMsg(e.message);
       } finally {
         hideLoading();
       }
@@ -34,29 +36,29 @@ export default function Profile() {
 
   // Add effect to clear success message after 3 seconds
   useEffect(() => {
-    if (msg) {
+    if (successMsg) {
       const timer = setTimeout(() => {
-        setMsg("");
+        setSuccessMsg("");
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [msg]);
+  }, [successMsg]);
 
   function handleChange(e) {
     setUserData({ ...userData, [e.target.name]: e.target.value });
   }
 
   async function save() {
-    setErr("");
-    setMsg("");
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
       showLoading();
       await api.put("/accounts/me", userData);
-      setMsg("Profile updated successfully");
+      setSuccessMsg("Profile updated successfully");
     } catch (e) {
       // Extract error message from response if available
       const errorMessage = e.response?.data?.error || e.message;
-      setErr(errorMessage);
+      setErrorMsg(errorMessage);
     } finally {
       hideLoading();
     }
@@ -89,6 +91,8 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-md mx-auto">
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center space-x-2">
@@ -219,23 +223,6 @@ export default function Profile() {
             >
               Save Changes
             </button>
-
-            {msg && (
-              <div className="flex items-center justify-center gap-2">
-                <img src={approvedIcon} alt="Success" className="h-5 w-5" />
-                <p className="text-green-500">{msg}</p>
-              </div>
-            )}
-            {err && (
-              <div className="flex items-center justify-center gap-2">
-                <img
-                  src={deniedIcon}
-                  alt="Error"
-                  className="h-5 w-5 filter brightness-0 saturate-100 invert-0 sepia-100 saturate-1000 hue-rotate-0 brightness-100 contrast-100"
-                />
-                <p className="text-red-500">{err}</p>
-              </div>
-            )}
           </div>
         </div>
       </div>

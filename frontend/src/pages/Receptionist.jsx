@@ -1,27 +1,29 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useLoading } from "../contexts/LoadingContext";
+import ErrorToast from "../components/ErrorToast";
+import SuccessToast from "../components/SuccessToast";
 
 export default function Reception() {
   const { showLoading, hideLoading } = useLoading();
   const [hotels, setHotels] = useState([]);
   const [hotel, setHotel] = useState("");
   const [email, setEmail] = useState("");
-  const [msg, setMsg] = useState("");
-  const [err, setErr] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     showLoading();
     api
       .get("/hotels")
       .then((r) => setHotels(r.data))
-      .catch((e) => setErr(e.message))
+      .catch((e) => setErrorMsg(e.message))
       .finally(() => hideLoading());
   }, []);
 
   async function createBooking() {
-    setErr("");
-    setMsg("");
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
       showLoading();
       // assume helper endpoint
@@ -39,35 +41,50 @@ export default function Reception() {
         checkOutDate: tomorrow.toISOString(),
         totalAmount: 200,
       });
-      setMsg("Booking created");
+      setSuccessMsg("Booking created successfully");
     } catch (e) {
-      setErr(e.message);
+      setErrorMsg(e.message);
     } finally {
       hideLoading();
     }
   }
 
   return (
-    <div className="center">
-      <h2>Reception</h2>
-      <select value={hotel} onChange={(e) => setHotel(e.target.value)}>
-        <option value="">-- choose hotel --</option>
-        {hotels.map((h) => (
-          <option key={h.hotelID} value={h.hotelID}>
-            {h.name}
-          </option>
-        ))}
-      </select>
-      <input
-        placeholder="customer email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button disabled={!hotel || !email} onClick={createBooking}>
-        Make booking
-      </button>
-      {msg && <p className="ok">{msg}</p>}
-      {err && <p className="err">{err}</p>}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
+      <div className="max-w-md mx-auto">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Reception
+        </h2>
+        <div className="space-y-4">
+          <select
+            value={hotel}
+            onChange={(e) => setHotel(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+          >
+            <option value="">-- choose hotel --</option>
+            {hotels.map((h) => (
+              <option key={h.hotelID} value={h.hotelID}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+          <input
+            placeholder="customer email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+          />
+          <button
+            disabled={!hotel || !email}
+            onClick={createBooking}
+            className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50"
+          >
+            Make booking
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
