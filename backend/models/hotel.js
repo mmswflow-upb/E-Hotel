@@ -9,7 +9,7 @@
  * @prop {string} description
  * @prop {string} phone
  * @prop {string} email
- * @prop {string[]} serviceIDs - Array of service IDs available at this hotel
+ * @prop {Object[]} availableServices - Array of service objects available at this hotel
  */
 class Hotel {
   constructor({
@@ -21,7 +21,7 @@ class Hotel {
     description = "",
     phone = "",
     email = "",
-    serviceIDs = [],
+    availableServices = [],
   }) {
     this.hotelID = hotelID;
     this.name = name;
@@ -31,7 +31,7 @@ class Hotel {
     this.description = description;
     this.phone = phone;
     this.email = email;
-    this.serviceIDs = serviceIDs;
+    this.availableServices = availableServices;
   }
 }
 

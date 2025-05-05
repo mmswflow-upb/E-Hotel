@@ -37,6 +37,10 @@ exports.listRooms = async (hotelId, { checkInDate, checkOutDate } = {}) => {
           (roomDetail) => roomDetail.roomNumber === room.roomNumber
         );
 
+        if (!isRoomInBooking) {
+          return false;
+        }
+
         // Check if the booking overlaps with the requested period
         const isOverlapping =
           (checkIn >= bookingCheckIn && checkIn < bookingCheckOut) ||
@@ -47,6 +51,12 @@ exports.listRooms = async (hotelId, { checkInDate, checkOutDate } = {}) => {
           isRoomInBooking && isOverlapping && booking.status !== "canceled"
         );
       });
+
+      if (isBooked) {
+        room.status = "booked";
+      } else {
+        room.status = "available";
+      }
 
       return !isBooked;
     });
@@ -78,12 +88,61 @@ exports.updateRoomStatus = async (roomId, status) => {
   await roomsCol.doc(roomId).update({ status });
 };
 
-exports.checkAvailability = async (hotelId, roomIds) => {
-  const snaps = await Promise.all(roomIds.map((id) => roomsCol.doc(id).get()));
-  return snaps.every(
-    (s) =>
-      s.exists &&
-      s.data().hotelID === hotelId &&
-      s.data().status === "available"
-  );
+exports.checkAvailability = async (
+  hotelId,
+  roomIds,
+  { checkInDate, checkOutDate } = {}
+) => {
+  // Get all bookings for this hotel
+  const bookings = await bookingService.listBookings({ hotelId });
+
+  // If no dates provided, use current time
+  const checkIn = checkInDate ? new Date(checkInDate) : new Date();
+  const checkOut = checkOutDate ? new Date(checkOutDate) : new Date();
+
+  // Check each room for availability
+  for (const roomId of roomIds) {
+    const roomDoc = await roomsCol.doc(roomId).get();
+    if (!roomDoc.exists) {
+      return false;
+    }
+    const room = roomDoc.data();
+    if (room.hotelID !== hotelId) {
+      return false;
+    }
+
+    // Check if the room has any overlapping bookings
+    const hasOverlappingBooking = bookings.some((booking) => {
+      // Skip cancelled bookings
+      if (booking.status === "cancelled") {
+        return false;
+      }
+
+      // Check if this room is in the booking
+      const isRoomInBooking = booking.roomDetails.some(
+        (roomDetail) => roomDetail.roomNumber === room.roomNumber
+      );
+
+      if (!isRoomInBooking) {
+        return false;
+      }
+
+      // Check if the booking overlaps with the requested period
+      const bookingCheckIn = new Date(booking.checkInDate);
+      const bookingCheckOut = new Date(booking.checkOutDate);
+
+      const isOverlapping =
+        (checkIn >= bookingCheckIn && checkIn < bookingCheckOut) ||
+        (checkOut > bookingCheckIn && checkOut <= bookingCheckOut) ||
+        (checkIn <= bookingCheckIn && checkOut >= bookingCheckOut);
+
+      return isOverlapping;
+    });
+
+    if (hasOverlappingBooking) {
+      return false;
+    }
+  }
+
+  return true;
 };

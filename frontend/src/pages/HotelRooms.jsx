@@ -21,10 +21,14 @@ export default function HotelRooms() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // date state
+  // date state for input fields
   const today = new Date().toISOString().split("T")[0];
-  const [ci, setCi] = useState(today);
-  const [co, setCo] = useState(today);
+  const [inputCi, setInputCi] = useState(today);
+  const [inputCo, setInputCo] = useState(today);
+
+  // date state for display and search
+  const [displayCi, setDisplayCi] = useState(today);
+  const [displayCo, setDisplayCo] = useState(today);
 
   // Fetch user account data
   useEffect(() => {
@@ -84,8 +88,8 @@ export default function HotelRooms() {
     fetchHotelDetails();
   }, [hotelId, user, navigate]);
 
-  // Function to update dates and ensure check-out is after check-in
-  const updateDates = (newCi, newCo) => {
+  // Function to update input dates and ensure check-out is after check-in
+  const updateInputDates = (newCi, newCo) => {
     const ciDate = new Date(newCi);
     const coDate = new Date(newCo);
 
@@ -96,8 +100,8 @@ export default function HotelRooms() {
       newCo = nextDay.toISOString().split("T")[0];
     }
 
-    setCi(newCi);
-    setCo(newCo);
+    setInputCi(newCi);
+    setInputCo(newCo);
   };
 
   // Function to fetch rooms with date parameters
@@ -106,8 +110,12 @@ export default function HotelRooms() {
 
     try {
       showLoading();
+      // Update display dates when search is clicked
+      setDisplayCi(inputCi);
+      setDisplayCo(inputCo);
+
       const response = await api.get(`/hotels/${hotelId}/rooms`, {
-        params: { checkIn: ci, checkOut: co },
+        params: { checkIn: inputCi, checkOut: inputCo },
       });
       setRooms(response.data);
     } catch (error) {
@@ -133,8 +141,8 @@ export default function HotelRooms() {
       showLoading();
       const response = await api.post(`/hotels/${hotelId}/bookings`, {
         roomID: num,
-        checkInDate: ci,
-        checkOutDate: co,
+        checkInDate: displayCi,
+        checkOutDate: displayCo,
         totalAmount: 200, // Assuming a fixed amount for now, you might want to get this from the room data
       });
       setMsg("Room booked successfully!");
@@ -187,8 +195,8 @@ export default function HotelRooms() {
               </label>
               <input
                 type="date"
-                value={ci}
-                onChange={(e) => updateDates(e.target.value, co)}
+                value={inputCi}
+                onChange={(e) => updateInputDates(e.target.value, inputCo)}
                 min={today}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
               />
@@ -199,9 +207,9 @@ export default function HotelRooms() {
               </label>
               <input
                 type="date"
-                value={co}
-                onChange={(e) => updateDates(ci, e.target.value)}
-                min={ci}
+                value={inputCo}
+                onChange={(e) => updateInputDates(inputCi, e.target.value)}
+                min={inputCi}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -222,8 +230,8 @@ export default function HotelRooms() {
               key={room.roomNumber}
               room={room}
               userAccount={userAccount}
-              ci={ci}
-              co={co}
+              ci={displayCi}
+              co={displayCo}
               onBook={book}
             />
           ))}

@@ -107,6 +107,29 @@ exports.getHotelById = async (hotelId) => {
     const doc = await hotelsCol.doc(hotelId).get();
     if (!doc.exists) throw new Error("Hotel not found");
     const data = doc.data();
+
+    // Fetch the actual service objects
+    const availableServices = [];
+    if (data.availableServiceIDs && data.availableServiceIDs.length > 0) {
+      for (const serviceId of data.availableServiceIDs) {
+        try {
+          const serviceDoc = await servicesCol.doc(serviceId).get();
+          if (serviceDoc.exists) {
+            const serviceData = serviceDoc.data();
+            availableServices.push({
+              serviceID: serviceId,
+              name: serviceData.name,
+              description: serviceData.description,
+              cost: serviceData.cost,
+              isOneTime: serviceData.isOneTime,
+            });
+          }
+        } catch (error) {
+          console.error(`Error fetching service ${serviceId}:`, error);
+        }
+      }
+    }
+
     return new Hotel({
       hotelID: doc.id,
       name: data.name,
@@ -114,6 +137,8 @@ exports.getHotelById = async (hotelId) => {
       starRating: data.starRating,
       phone: data.phone || "",
       email: data.email || "",
+      description: data.description || "",
+      availableServices,
     });
   } catch (error) {
     throw error;

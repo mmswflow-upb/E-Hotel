@@ -3,10 +3,13 @@ const roomSvc = require("../services/roomService");
 
 exports.list = async (req, res) => {
   try {
-    const { checkInDate, checkOutDate } = req.query;
+    const { checkIn, checkOut } = req.query;
+    console.log(
+      `📅 Received dates from frontend: checkIn=${checkIn}, checkOut=${checkOut}`
+    );
     const rooms = await roomSvc.listRooms(req.params.hotelId, {
-      checkInDate,
-      checkOutDate,
+      checkInDate: checkIn,
+      checkOutDate: checkOut,
     });
     res.json(rooms);
   } catch (e) {
