@@ -8,7 +8,7 @@
  * @prop {Object[]} serviceCharges - Array of service charges with usage details
  * @prop {number} totalAmount
  * @prop {Date} issueDate
- * @prop {string} status - 'pending', 'paid', 'cancelled'
+ * @prop {string} status - 'pending', 'approved', 'declined', 'No Penalties', 'Penalties Paid'
  */
 class Invoice {
   constructor({

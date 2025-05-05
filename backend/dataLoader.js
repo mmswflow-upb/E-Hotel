@@ -238,8 +238,8 @@ async function seed() {
 
   /* 4. bookings, payments, invoices */
   console.log("✨ Bookings / payments / invoices");
-  const now = new Date(),
-    bookings = [];
+  const now = new Date();
+  const bookings = [];
   for (let i = 0; i < customers.length; i++) {
     const cust = customers[i];
     for (let b = 0; b < 5; b++) {
@@ -265,6 +265,20 @@ async function seed() {
       }
 
       const totalAmount = (b % 2 ? 100 : 150) * 2;
+      const checkInDate = new Date(ci);
+      const hoursUntilCheckIn = (checkInDate - now) / 36e5;
+      const penaltyAmount = hoursUntilCheckIn <= 24 ? totalAmount * 0.5 : 0;
+
+      // Determine payment status based on booking status and penalty
+      let paymentStatus;
+      if (status === "cancelled") {
+        paymentStatus = penaltyAmount > 0 ? "penalties paid" : "no penalties";
+      } else if (status === "checked-out") {
+        paymentStatus = "approved";
+      } else {
+        paymentStatus = "waiting";
+      }
+
       const bookingID = await add("bookings", {
         hotelID,
         customerID: cust.uid,
@@ -278,49 +292,80 @@ async function seed() {
         status,
         createdAt: admin.firestore.Timestamp.fromDate(ci),
         cancellationGracePeriod: 24,
-        paymentStatus: status === "cancelled" ? "refunded" : "approved",
+        paymentStatus,
       });
       bookings.push(bookingID);
 
-      // Create payment transaction
-      await add("paymentTransactions", {
-        bookingID,
-        amount: totalAmount,
-        paymentMethod: "card",
-        transactionDate: admin.firestore.Timestamp.fromDate(ci),
-        status: status === "cancelled" ? "refunded" : "approved",
-      });
+      // Create payment transaction only for checked-out or cancelled bookings
+      if (status === "checked-out" || status === "cancelled") {
+        if (status === "cancelled") {
+          const cancellationID = await add("cancellations", {
+            hotelID,
+            bookingID,
+            canceledBy: cust.uid,
+            cancellationTime: admin.firestore.Timestamp.fromDate(ci),
+            penaltyApplied: penaltyAmount,
+            penaltyPaid: penaltyAmount > 0,
+          });
 
-      // Create invoice for non-cancelled bookings
-      if (status !== "cancelled") {
-        await add("invoices", {
-          bookingID,
-          hotelID,
-          roomCharges: [
-            {
-              roomNumber: (hotelIDs.indexOf(hotelID) + 1) * 100 + b + 1,
-              total: totalAmount,
-              nights: 2,
-            },
-          ],
-          serviceCharges: [],
-          totalAmount,
-          issueDate: admin.firestore.Timestamp.fromDate(ci),
-          status: "Paid",
-        });
-      }
+          // Handle penalties
+          if (penaltyAmount > 0) {
+            // Create penalty payment transaction
+            await add("paymentTransactions", {
+              bookingID,
+              amount: penaltyAmount,
+              paymentMethod: "balance",
+              transactionDate: admin.firestore.Timestamp.fromDate(ci),
+              status: "penalties paid",
+              type: "penalty",
+            });
 
-      // Create cancellation record for cancelled bookings
-      if (status === "cancelled") {
-        await add("cancellations", {
-          hotelID,
-          bookingID,
-          canceledBy: cust.uid,
-          cancellationTime: admin.firestore.Timestamp.fromDate(ci),
-          penaltyApplied: totalAmount * 0.5,
-          penaltyPaid: true,
-          refunded: true,
-        });
+            // Create penalty invoice
+            await add("invoices", {
+              bookingID,
+              hotelID,
+              cancellationID,
+              roomCharges: [],
+              serviceCharges: [
+                {
+                  name: "Cancellation Penalty",
+                  total: penaltyAmount,
+                  quantity: 1,
+                  unit: "penalty",
+                },
+              ],
+              totalAmount: penaltyAmount,
+              issueDate: admin.firestore.Timestamp.fromDate(ci),
+              status: "penalties paid",
+              type: "penalty",
+            });
+          }
+        } else {
+          // Handle checked-out bookings
+          await add("paymentTransactions", {
+            bookingID,
+            amount: totalAmount,
+            paymentMethod: "card",
+            transactionDate: admin.firestore.Timestamp.fromDate(ci),
+            status: "approved",
+          });
+
+          await add("invoices", {
+            bookingID,
+            hotelID,
+            roomCharges: [
+              {
+                roomNumber: (hotelIDs.indexOf(hotelID) + 1) * 100 + b + 1,
+                total: totalAmount,
+                nights: 2,
+              },
+            ],
+            serviceCharges: [],
+            totalAmount,
+            issueDate: admin.firestore.Timestamp.fromDate(ci),
+            status: "approved",
+          });
+        }
       }
     }
   }

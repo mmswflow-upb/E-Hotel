@@ -74,46 +74,6 @@ exports.createBooking = async ({
     let bookingId;
     // Start a transaction to ensure atomicity
     await db.runTransaction(async (transaction) => {
-      if (hasSufficientBalance) {
-        console.log("Updating customer balance...");
-        // Update customer balance only if sufficient
-        transaction.update(db.collection("customers").doc(customerID), {
-          balance: admin.firestore.FieldValue.increment(-totalAmount),
-        });
-      }
-
-      console.log("Creating payment transaction...");
-      // Create payment transaction
-      const paymentPayload = {
-        bookingID: null, // Will be updated after booking creation
-        amount: totalAmount,
-        paymentMethod: "balance",
-        transactionDate: admin.firestore.Timestamp.now(),
-        status: hasSufficientBalance ? "approved" : "waiting",
-      };
-      const paymentRef = db.collection("paymentTransactions").doc();
-      transaction.set(paymentRef, paymentPayload);
-
-      // Create invoice only if payment is approved
-      if (hasSufficientBalance) {
-        console.log("Creating invoice...");
-        const invoicePayload = {
-          bookingID: null, // Will be updated after booking creation
-          hotelID: hotelId,
-          roomCharges: roomData.map((room) => ({
-            roomNumber: room.roomNumber,
-            total: room.pricePerNight * nights,
-            nights: nights,
-          })),
-          serviceCharges: [],
-          totalAmount,
-          issueDate: admin.firestore.Timestamp.now(),
-          status: "Paid",
-        };
-        const invoiceRef = db.collection("invoices").doc();
-        transaction.set(invoiceRef, invoicePayload);
-      }
-
       console.log("Updating room status...");
       // mark rooms booked
       await Promise.all(
@@ -132,8 +92,7 @@ exports.createBooking = async ({
         totalAmount,
         status: "booked",
         createdAt: admin.firestore.Timestamp.now(),
-        paymentTransactionID: paymentRef.id,
-        paymentStatus: hasSufficientBalance ? "approved" : "waiting",
+        paymentStatus: "waiting",
       };
 
       console.log("Creating booking...");
@@ -141,12 +100,6 @@ exports.createBooking = async ({
       const bookingRef = db.collection("bookings").doc();
       bookingId = bookingRef.id;
       transaction.set(bookingRef, bookingPayload);
-
-      console.log("Updating payment transaction with booking ID...");
-      // Update payment transaction with booking ID
-      transaction.update(paymentRef, {
-        bookingID: bookingId,
-      });
     });
 
     console.log("Transaction completed, retrieving booking...");
@@ -171,7 +124,7 @@ exports.createBooking = async ({
       cancellationGracePeriod,
       totalAmount,
       status: "booked",
-      paymentStatus: hasSufficientBalance ? "approved" : "waiting",
+      paymentStatus: "waiting",
       createdAt: bookingData.createdAt.toDate(),
     });
   } catch (e) {
@@ -228,19 +181,26 @@ exports.listAllUserBookings = async (uid) => {
         .collection("paymentTransactions")
         .where("bookingID", "==", d.id)
         .get();
-      const paymentStatus = paymentSnap.empty
-        ? "pending"
-        : paymentSnap.docs[0].data().status;
 
-      // If payment status is pending, check if it's due to insufficient funds
-      if (paymentStatus === "pending") {
-        const customerDoc = await db
-          .collection("customers")
-          .doc(data.customerID)
-          .get();
-        const customerData = customerDoc.data();
-        if (customerData.balance < data.totalAmount) {
-          paymentStatus = "insufficient_funds";
+      // For cancelled bookings, use their existing payment status
+      if (data.status === "cancelled") {
+        paymentStatus = data.paymentStatus;
+      } else {
+        // For non-cancelled bookings, check payment transactions
+        paymentStatus = paymentSnap.empty
+          ? "waiting"
+          : paymentSnap.docs[0].data().status;
+
+        // If payment status is waiting, check if it's due to insufficient funds
+        if (paymentStatus === "waiting") {
+          const customerDoc = await db
+            .collection("customers")
+            .doc(data.customerID)
+            .get();
+          const customerData = customerDoc.data();
+          if (customerData.balance < data.totalAmount) {
+            paymentStatus = "insufficient_funds";
+          }
         }
       }
 
@@ -314,11 +274,40 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
     const now = new Date();
     const checkInDate = data.checkInDate.toDate();
     const hoursUntilCheckIn = (checkInDate - now) / 36e5;
-    // Only apply penalty if within grace period (24 hours before check-in)
-    const penalty =
-      hoursUntilCheckIn <= data.cancellationGracePeriod
-        ? data.totalAmount * 0.5
-        : 0;
+
+    console.log(`\n📝 Cancelling booking ${bookingID}`);
+    console.log(`📅 Check-in date: ${checkInDate.toLocaleString()}`);
+    console.log(`⏰ Hours until check-in: ${hoursUntilCheckIn.toFixed(1)}`);
+    console.log(`💰 Total amount: $${data.totalAmount}`);
+    console.log(`📊 Current status: ${data.status}`);
+
+    // Calculate penalty based on booking status
+    let penalty;
+    if (data.status === "checked-in") {
+      // For active bookings, charge full amount
+      penalty = data.totalAmount;
+      console.log(`⚠️ Full penalty applied for active booking: $${penalty}`);
+    } else {
+      // For future bookings, apply 50% penalty if within grace period
+      penalty =
+        hoursUntilCheckIn <= data.cancellationGracePeriod
+          ? data.totalAmount * 0.5
+          : 0;
+
+      if (penalty > 0) {
+        console.log(
+          `⚠️ Cancellation penalty applied: $${penalty} (${hoursUntilCheckIn.toFixed(
+            1
+          )} hours until check-in)`
+        );
+      } else {
+        console.log(
+          `✅ No penalty applied (${hoursUntilCheckIn.toFixed(
+            1
+          )} hours until check-in)`
+        );
+      }
+    }
 
     // If there's a penalty, check if the customer has sufficient funds
     if (penalty > 0) {
@@ -328,15 +317,20 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
         .get();
       if (!customerDoc.exists) throw new Error("Customer not found");
       const customerData = customerDoc.data();
+      console.log(`💳 Customer balance: $${customerData.balance}`);
       if (customerData.balance < penalty) {
+        console.log(`❌ Insufficient funds to pay cancellation penalty`);
         throw new Error("Insufficient funds to pay cancellation penalty");
       }
+      console.log(`✅ Sufficient funds available for penalty payment`);
     }
 
     // Start a transaction to ensure atomicity
     await db.runTransaction(async (transaction) => {
+      console.log(`\n🔄 Starting cancellation transaction...`);
       // Update booking status
       transaction.update(bookingsCol.doc(bookingID), { status: "cancelled" });
+      console.log(`✅ Booking status updated to cancelled`);
 
       // Free rooms
       await Promise.all(
@@ -344,66 +338,16 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
           roomService.updateRoomStatus(rid, "available")
         )
       );
-
-      // Get the payment transaction first
-      const paymentSnap = await db
-        .collection("paymentTransactions")
-        .where("bookingID", "==", bookingID)
-        .get();
-
-      // Update invoice status if it exists
-      const invoiceSnap = await db
-        .collection("invoices")
-        .where("bookingID", "==", bookingID)
-        .get();
-
-      if (!invoiceSnap.empty) {
-        const invoiceDoc = invoiceSnap.docs[0];
-        // Set invoice status based on payment status and check-in date
-        const invoiceStatus =
-          paymentSnap.docs[0]?.data().status === "approved" && now < checkInDate
-            ? "refunded"
-            : "cancelled";
-        transaction.update(invoiceDoc.ref, { status: invoiceStatus });
-      }
-
-      if (!paymentSnap.empty) {
-        const paymentDoc = paymentSnap.docs[0];
-        const paymentData = paymentDoc.data();
-
-        // Only process refund if payment was approved and check-in date hasn't passed
-        if (paymentData.status === "approved" && now < checkInDate) {
-          // Refund the amount (minus penalty if any)
-          const refundAmount = data.totalAmount - penalty;
-          transaction.update(db.collection("customers").doc(data.customerID), {
-            balance: admin.firestore.FieldValue.increment(refundAmount),
-          });
-
-          // Update the original payment status to refunded
-          transaction.update(paymentDoc.ref, { status: "refunded" });
-
-          // Create a refund transaction
-          const refundPayload = {
-            bookingID,
-            amount: refundAmount,
-            paymentMethod: "refund",
-            transactionDate: admin.firestore.Timestamp.fromDate(now),
-            status: "refunded",
-            type: "refund",
-          };
-          transaction.set(
-            db.collection("paymentTransactions").doc(),
-            refundPayload
-          );
-        }
-      }
+      console.log(`✅ Rooms marked as available`);
 
       // If there's a penalty, create a penalty payment transaction and invoice
       if (penalty > 0) {
+        console.log(`\n💰 Processing penalty payment...`);
         // Deduct penalty from customer balance
         transaction.update(db.collection("customers").doc(data.customerID), {
           balance: admin.firestore.FieldValue.increment(-penalty),
         });
+        console.log(`✅ Penalty deducted from customer balance`);
 
         // Create penalty payment transaction
         const penaltyPaymentPayload = {
@@ -411,11 +355,12 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
           amount: penalty,
           paymentMethod: "balance",
           transactionDate: admin.firestore.Timestamp.fromDate(now),
-          status: "Paid Penalties",
+          status: "penalties paid",
           type: "penalty",
         };
         const penaltyPaymentRef = db.collection("paymentTransactions").doc();
         transaction.set(penaltyPaymentRef, penaltyPaymentPayload);
+        console.log(`✅ Penalty payment transaction created`);
 
         // Create penalty invoice
         const penaltyInvoicePayload = {
@@ -432,19 +377,25 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
           ],
           totalAmount: penalty,
           issueDate: admin.firestore.Timestamp.fromDate(now),
-          status: "Paid",
+          status: "penalties paid",
         };
         const penaltyInvoiceRef = db.collection("invoices").doc();
         transaction.set(penaltyInvoiceRef, penaltyInvoicePayload);
+        console.log(`✅ Penalty invoice created`);
 
-        // Update booking payment status to Paid Penalties
+        // Update booking payment status to match invoice status
         transaction.update(bookingsCol.doc(bookingID), {
-          paymentStatus: "Paid Penalties",
+          paymentStatus: "penalties paid",
           status: "cancelled",
         });
+        console.log(`✅ Booking payment status updated to "penalties paid"`);
       } else {
-        // Update booking status only if no penalty
-        transaction.update(bookingsCol.doc(bookingID), { status: "cancelled" });
+        // Update booking status and payment status to no penalties
+        transaction.update(bookingsCol.doc(bookingID), {
+          status: "cancelled",
+          paymentStatus: "no penalties",
+        });
+        console.log(`✅ Booking payment status updated to "no penalties"`);
       }
 
       // Log cancellation
@@ -455,16 +406,14 @@ exports.cancelBooking = async ({ hotelId, bookingID, canceledBy }) => {
         cancellationTime: admin.firestore.Timestamp.fromDate(now),
         penaltyApplied: penalty,
         penaltyPaid: penalty > 0,
-        refunded:
-          now < checkInDate &&
-          paymentSnap.docs[0]?.data().status === "approved",
       };
       transaction.set(cancelsCol.doc(), payload);
+      console.log(`✅ Cancellation record created`);
     });
 
-    return { bookingID, refunded: now < checkInDate };
+    console.log(`\n✨ Booking ${bookingID} cancelled successfully!`);
+    return { bookingID };
   } catch (e) {
-    // Return the error without logging it to the console
     throw e;
   }
 };
@@ -579,9 +528,16 @@ exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
         .collection("paymentTransactions")
         .where("bookingID", "==", d.id)
         .get();
-      const paymentStatus = paymentSnap.empty
-        ? "pending"
-        : paymentSnap.docs[0].data().status;
+
+      // For cancelled bookings, use their existing payment status
+      let paymentStatus;
+      if (data.status === "cancelled") {
+        paymentStatus = data.paymentStatus;
+      } else {
+        paymentStatus = paymentSnap.empty
+          ? "waiting"
+          : paymentSnap.docs[0].data().status;
+      }
 
       // Get invoice status
       const invoiceSnap = await db
@@ -643,9 +599,16 @@ exports.getBookingById = async (bookingId, { customerId, staffId } = {}) => {
     .collection("paymentTransactions")
     .where("bookingID", "==", doc.id)
     .get();
-  const paymentStatus = paymentSnap.empty
-    ? "pending"
-    : paymentSnap.docs[0].data().status;
+
+  // For cancelled bookings, use their existing payment status
+  let paymentStatus;
+  if (data.status === "cancelled") {
+    paymentStatus = data.paymentStatus;
+  } else {
+    paymentStatus = paymentSnap.empty
+      ? "waiting"
+      : paymentSnap.docs[0].data().status;
+  }
 
   // Get invoice status
   const invoiceSnap = await db
@@ -768,7 +731,7 @@ exports.payPenalty = async ({ hotelId, bookingID, customerID }) => {
         ],
         totalAmount: cancelData.penaltyApplied,
         issueDate: admin.firestore.Timestamp.now(),
-        status: "Paid",
+        status: "Paid Penalties",
       };
       const invoiceRef = db.collection("invoices").doc();
       transaction.set(invoiceRef, invoicePayload);

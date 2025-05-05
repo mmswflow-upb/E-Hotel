@@ -255,7 +255,8 @@ export default function BookingDetail() {
                   src={
                     booking.paymentStatus === "approved" ||
                     booking.paymentStatus === "refunded" ||
-                    booking.paymentStatus === "Paid Penalties"
+                    booking.paymentStatus === "penalties paid" ||
+                    booking.paymentStatus === "no penalties"
                       ? approvedIcon
                       : booking.paymentStatus === "waiting"
                       ? waitingIcon
@@ -269,7 +270,8 @@ export default function BookingDetail() {
                       ? "dark:invert dark:brightness-0 dark:opacity-80"
                       : booking.paymentStatus === "approved" ||
                         booking.paymentStatus === "refunded" ||
-                        booking.paymentStatus === "Paid Penalties"
+                        booking.paymentStatus === "penalties paid" ||
+                        booking.paymentStatus === "no penalties"
                       ? ""
                       : "dark:invert dark:brightness-0 dark:opacity-80"
                   }`}
@@ -283,7 +285,8 @@ export default function BookingDetail() {
                       ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
                       : booking.paymentStatus === "approved" ||
                         booking.paymentStatus === "refunded" ||
-                        booking.paymentStatus === "Paid Penalties"
+                        booking.paymentStatus === "penalties paid" ||
+                        booking.paymentStatus === "no penalties"
                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                   }`}

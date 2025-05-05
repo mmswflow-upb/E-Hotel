@@ -112,9 +112,11 @@ export default function Invoice() {
                   Status:{" "}
                   <span
                     className={`px-2 py-1 rounded text-sm font-medium ${
-                      inv.status === "Paid" || inv.status === "refunded"
+                      inv.status === "approved" ||
+                      inv.status === "refunded" ||
+                      inv.status === "penalties paid"
                         ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : inv.status === "Pending"
+                        : inv.status === "pending"
                         ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                         : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                     }`}
