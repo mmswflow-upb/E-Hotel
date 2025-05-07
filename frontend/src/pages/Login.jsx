@@ -58,6 +58,12 @@ export default function Login() {
             </h2>
           </div>
         </div>
+        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-sm text-gray-700 dark:text-gray-300">
+          <p className="font-semibold mb-2">Test Accounts:</p>
+          <p>Hotel Manager: azzam.zafar@gmail.com / 123456</p>
+          <p>Receptionist: ben@example.com / 123456</p>
+          <p>Customer: mario@example.com / 123456</p>
+        </div>
         <form onSubmit={submit} className="mt-8 space-y-6">
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

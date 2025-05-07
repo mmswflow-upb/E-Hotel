@@ -43,7 +43,7 @@ exports.listAllMine = async (req, res) => {
 
 exports.listAll = async (req, res) => {
   const bookings = await bookingSvc.listBookings({
-    hotelId: req.query.hotelId,
+    hotelId: req.params.hotelId,
     staffId: req.user.id,
   });
   res.json(bookings);

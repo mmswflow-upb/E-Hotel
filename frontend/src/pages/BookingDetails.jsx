@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../lib/api";
 import { useLoading } from "../contexts/LoadingContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useCustomer } from "../hooks/useCustomer";
 import bedRoomIcon from "../assets/bed-room.png";
 import doubleBedRoomIcon from "../assets/double-bed-room.png";
 import approvedIcon from "../assets/approved.png";
@@ -11,16 +13,30 @@ import waitingIcon from "../assets/waiting.png";
 import mapPinIcon from "../assets/map-pin.png";
 import phoneIcon from "../assets/phone-call.png";
 import emailIcon from "../assets/email.png";
+import profileIcon from "../assets/profile.png";
 import ErrorToast from "../components/ErrorToast";
 import SuccessToast from "../components/SuccessToast";
 
 export default function BookingDetail() {
   const { bookingId } = useParams();
   const { showLoading, hideLoading } = useLoading();
+  const { role } = useAuth();
   const [booking, setBooking] = useState(null);
   const [invoice, setInvoice] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // The useCustomer hook will only fetch data if the user is staff
+  const {
+    customer,
+    loading: customerLoading,
+    error: customerError,
+  } = useCustomer(booking?.customerID);
+
+  // Check if user is staff
+  const isStaff = ["Receptionist", "HotelManager", "SystemAdmin"].includes(
+    role
+  );
 
   useEffect(() => {
     (async () => {
@@ -116,6 +132,9 @@ export default function BookingDetail() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      {customerError && isStaff && (
+        <ErrorToast message={customerError} onClose={() => {}} />
+      )}
       <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
       <div className="max-w-7xl mx-auto">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6">
@@ -201,6 +220,109 @@ export default function BookingDetail() {
                 )}
               </div>
             </div>
+
+            {isStaff && !customerLoading && customer && (
+              <div className="mt-6 space-y-2">
+                <div className="flex items-center gap-2 mb-4">
+                  <img
+                    src={profileIcon}
+                    alt="Customer"
+                    className="h-6 w-6 dark:invert dark:brightness-0 dark:opacity-80"
+                  />
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Customer Information
+                  </h4>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-12 h-12 bg-primary/10 dark:bg-primary-dark/20 rounded-full flex items-center justify-center">
+                      <span className="text-xl font-semibold text-primary dark:text-primary-dark">
+                        {customer.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </span>
+                    </div>
+                    <div>
+                      <h5 className="text-lg font-medium text-gray-900 dark:text-white">
+                        {customer.name}
+                      </h5>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Customer ID: {customer.customerID}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    {customer.email && (
+                      <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                          <img
+                            src={emailIcon}
+                            alt="Email"
+                            className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Email
+                          </p>
+                          <a
+                            href={`mailto:${customer.email}`}
+                            className="text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary-dark"
+                          >
+                            {customer.email}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {customer.phoneNumber && (
+                      <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                          <img
+                            src={phoneIcon}
+                            alt="Phone"
+                            className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Phone
+                          </p>
+                          <a
+                            href={`tel:${customer.phoneNumber}`}
+                            className="text-gray-900 dark:text-white hover:text-primary dark:hover:text-primary-dark"
+                          >
+                            {customer.phoneNumber}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {customer.address && (
+                    <div className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <img
+                          src={mapPinIcon}
+                          alt="Address"
+                          className="h-5 w-5 dark:invert dark:brightness-0 dark:opacity-80"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Address
+                        </p>
+                        <p className="text-gray-900 dark:text-white">
+                          {customer.address}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white mb-2">

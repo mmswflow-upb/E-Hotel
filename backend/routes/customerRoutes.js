@@ -3,6 +3,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const role = require("../middleware/role");
 const custCtrl = require("../controllers/customerController");
+const customerService = require("../services/customerService");
 
 const router = express.Router();
 
@@ -26,18 +27,19 @@ router.get(
   }
 );
 
+// Get customer details by ID
 router.get(
-  "/:customerID",
+  "/:customerId",
   role("Receptionist", "HotelManager", "SystemAdmin"),
   async (req, res) => {
     try {
-      await custCtrl.getById(req, res);
-    } catch (error) {
-      if (error.status) {
-        res.status(error.status).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: "Internal server error" });
+      const customer = await customerService.getCustomer(req.params.customerId);
+      if (customer.error) {
+        return res.status(404).json({ error: customer.error });
       }
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 );

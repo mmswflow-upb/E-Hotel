@@ -140,22 +140,80 @@ exports.listUserBookings = async (hotelId, customerID) => {
     .where("hotelID", "==", hotelId)
     .where("customerID", "==", customerID)
     .get();
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return new Booking({
-      bookingID: d.id,
-      hotelID,
-      customerID,
-      roomDetails: data.roomDetails,
-      checkInDate: data.checkInDate.toDate(),
-      checkOutDate: data.checkOutDate.toDate(),
-      checkedOutAt: data.checkedOutAt?.toDate(),
-      cancellationGracePeriod: data.cancellationGracePeriod,
-      totalAmount: data.totalAmount,
-      status: data.status,
-      createdAt: data.createdAt.toDate(),
-    });
-  });
+
+  const bookings = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data();
+
+      // Get hotel details
+      const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
+      if (!hotelDoc.exists) {
+        console.warn(`Hotel ${data.hotelID} not found for booking ${d.id}`);
+        return null;
+      }
+      const hotelData = hotelDoc.data();
+
+      // Get room details
+      const roomPromises = data.roomDetails.map((roomId) =>
+        db.collection("rooms").doc(roomId).get()
+      );
+      const roomDocs = await Promise.all(roomPromises);
+      const roomDetails = roomDocs.map((roomDoc) => ({
+        roomNumber: roomDoc.data().roomNumber,
+        type: roomDoc.data().type,
+        status: roomDoc.data().status,
+      }));
+
+      // Get payment status
+      const paymentSnap = await db
+        .collection("paymentTransactions")
+        .where("bookingID", "==", d.id)
+        .get();
+
+      // For cancelled bookings, use their existing payment status
+      let paymentStatus;
+      if (data.status === "cancelled") {
+        paymentStatus = data.paymentStatus;
+      } else {
+        paymentStatus = paymentSnap.empty
+          ? "waiting"
+          : paymentSnap.docs[0].data().status;
+      }
+
+      // Get invoice status
+      const invoiceSnap = await db
+        .collection("invoices")
+        .where("bookingID", "==", d.id)
+        .get();
+      const hasInvoice = !invoiceSnap.empty;
+
+      return new Booking({
+        bookingID: d.id,
+        hotelID: data.hotelID,
+        hotelDetails: {
+          name: hotelData.name,
+          address: hotelData.address,
+          starRating: hotelData.starRating,
+          phone: hotelData.phone || "",
+          email: hotelData.email || "",
+        },
+        customerID: data.customerID,
+        roomDetails,
+        checkInDate: data.checkInDate.toDate(),
+        checkOutDate: data.checkOutDate.toDate(),
+        checkedOutAt: data.checkedOutAt?.toDate(),
+        cancellationGracePeriod: data.cancellationGracePeriod,
+        totalAmount: data.totalAmount,
+        status: data.status,
+        paymentStatus,
+        hasInvoice,
+        createdAt: data.createdAt.toDate(),
+      });
+    })
+  );
+
+  // Filter out any null bookings (from missing hotels)
+  return bookings.filter((booking) => booking !== null);
 };
 
 exports.listAllUserBookings = async (uid) => {
@@ -463,6 +521,9 @@ exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
   } else if (staffId) {
     // For staff, get bookings for hotels they manage/work at
     const staffDoc = await db.collection("staff").doc(staffId).get();
+    if (!staffDoc.exists) {
+      throw new Error("Staff member not found");
+    }
     const staffData = staffDoc.data();
     if (staffData.hotelId) {
       query = query.where("hotelID", "==", staffData.hotelId);
@@ -476,7 +537,24 @@ exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
 
       // Get hotel details
       const hotelDoc = await db.collection("hotels").doc(data.hotelID).get();
+      if (!hotelDoc.exists) {
+        console.warn(`Hotel ${data.hotelID} not found for booking ${d.id}`);
+        return null;
+      }
       const hotelData = hotelDoc.data();
+
+      // Get customer details
+      const customerDoc = await db
+        .collection("customers")
+        .doc(data.customerID)
+        .get();
+      if (!customerDoc.exists) {
+        console.warn(
+          `Customer ${data.customerID} not found for booking ${d.id}`
+        );
+        return null;
+      }
+      const customerData = customerDoc.data();
 
       // Get room details
       const roomPromises = data.roomDetails.map((roomId) =>
@@ -523,6 +601,11 @@ exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
           email: hotelData.email || "",
         },
         customerID: data.customerID,
+        customerDetails: {
+          name: customerData.name || "",
+          email: customerData.email || "",
+          phoneNumber: customerData.phoneNumber || "",
+        },
         roomDetails,
         checkInDate: data.checkInDate.toDate(),
         checkOutDate: data.checkOutDate.toDate(),
@@ -536,7 +619,9 @@ exports.listBookings = async ({ customerID, hotelId, staffId } = {}) => {
       });
     })
   );
-  return bookings;
+
+  // Filter out any null bookings (from missing hotels or customers)
+  return bookings.filter((booking) => booking !== null);
 };
 
 exports.getBookingById = async (bookingId, { customerId, staffId } = {}) => {

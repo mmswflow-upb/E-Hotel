@@ -1,88 +1,116 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
 import { useLoading } from "../contexts/LoadingContext";
+import { useAuth } from "../contexts/AuthContext";
+import scheduledIcon from "../assets/scheduled.png";
+import BookingCard from "../components/BookingCard";
 import ErrorToast from "../components/ErrorToast";
-import SuccessToast from "../components/SuccessToast";
 
 export default function Reception() {
   const { showLoading, hideLoading } = useLoading();
-  const [hotels, setHotels] = useState([]);
-  const [hotel, setHotel] = useState("");
-  const [email, setEmail] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState({
+    history: [],
+    active: [],
+    future: [],
+  });
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    showLoading();
-    api
-      .get("/hotels")
-      .then((r) => setHotels(r.data))
-      .catch((e) => setErrorMsg(e.message))
-      .finally(() => hideLoading());
+    const fetchData = async () => {
+      try {
+        showLoading();
+        // Get receptionist's hotel
+        const receptionistResponse = await api.get("/accounts/me");
+        const hotelId = receptionistResponse.data.hotelID;
+        if (!hotelId) {
+          throw new Error("No hotel assigned to this receptionist");
+        }
+        // Get bookings for the hotel
+        const bookingsResponse = await api.get(`/hotels/${hotelId}/bookings`);
+        const hotelBookings = bookingsResponse.data;
+        // Partition bookings
+        const now = new Date();
+        const history = hotelBookings.filter(
+          (b) => b.status === "checked-out" || b.status === "cancelled"
+        );
+        const active = hotelBookings.filter((b) => b.status === "checked-in");
+        const future = hotelBookings.filter((b) => b.status === "booked");
+        setBookings({ history, active, future });
+      } catch (e) {
+        setErrorMsg(e.message);
+      } finally {
+        hideLoading();
+      }
+    };
+    fetchData();
   }, []);
-
-  async function createBooking() {
-    setErrorMsg("");
-    setSuccessMsg("");
-    try {
-      showLoading();
-      // assume helper endpoint
-      const u = await api.get(`/users/by-email`, { params: { email } });
-      const uid = u.data.uid;
-      const rooms = await api.get(`/hotels/${hotel}/rooms`);
-      const room = rooms.data.find((r) => r.status === "available");
-      if (!room) throw new Error("No available rooms");
-      const today = new Date();
-      const tomorrow = new Date(today.getTime() + 24 * 3600e3);
-      await api.post(`/hotels/${hotel}/bookings`, {
-        customerId: uid,
-        roomID: room.roomNumber,
-        checkInDate: today.toISOString(),
-        checkOutDate: tomorrow.toISOString(),
-        totalAmount: 200,
-      });
-      setSuccessMsg("Booking created successfully");
-    } catch (e) {
-      setErrorMsg(e.message);
-    } finally {
-      hideLoading();
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
-      <SuccessToast message={successMsg} onClose={() => setSuccessMsg("")} />
-      <div className="max-w-md mx-auto">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-          Reception
-        </h2>
-        <div className="space-y-4">
-          <select
-            value={hotel}
-            onChange={(e) => setHotel(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-          >
-            <option value="">-- choose hotel --</option>
-            {hotels.map((h) => (
-              <option key={h.hotelID} value={h.hotelID}>
-                {h.name}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="customer email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
-          />
-          <button
-            disabled={!hotel || !email}
-            onClick={createBooking}
-            className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-light dark:bg-primary-dark dark:hover:bg-primary-dark-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-primary-dark disabled:opacity-50"
-          >
-            Make booking
-          </button>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center space-x-2">
+            <img
+              src={scheduledIcon}
+              alt="Bookings"
+              className="h-8 w-8 dark:invert dark:brightness-0 dark:opacity-80"
+            />
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+              Hotel Bookings
+            </h2>
+          </div>
+        </div>
+        <div className="space-y-8">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Active Bookings
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bookings.active.length > 0 ? (
+                bookings.active.map((booking) => (
+                  <BookingCard key={booking.bookingID} booking={booking} />
+                ))
+              ) : (
+                <p className="text-gray-600 dark:text-gray-300">
+                  No active bookings
+                </p>
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Upcoming Bookings
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bookings.future.length > 0 ? (
+                bookings.future.map((booking) => (
+                  <BookingCard key={booking.bookingID} booking={booking} />
+                ))
+              ) : (
+                <p className="text-gray-600 dark:text-gray-300">
+                  No upcoming bookings
+                </p>
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Past Bookings
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bookings.history.length > 0 ? (
+                bookings.history.map((booking) => (
+                  <BookingCard key={booking.bookingID} booking={booking} />
+                ))
+              ) : (
+                <p className="text-gray-600 dark:text-gray-300">
+                  No past bookings
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

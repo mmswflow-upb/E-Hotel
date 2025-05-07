@@ -1,17 +1,33 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import approvedIcon from "../assets/approved.png";
 import deniedIcon from "../assets/denied.png";
 import invoiceIcon from "../assets/invoice.png";
 import waitingIcon from "../assets/waiting.png";
 import ErrorToast from "./ErrorToast";
+import { useCustomer } from "../hooks/useCustomer";
 
 export default function BookingCard({ booking }) {
   const [errorMsg, setErrorMsg] = useState("");
+  const { role } = useAuth();
+  const {
+    customer,
+    loading: customerLoading,
+    error: customerError,
+  } = useCustomer(booking.customerID);
+
+  // Check if user is staff
+  const isStaff = ["Receptionist", "HotelManager", "SystemAdmin"].includes(
+    role
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 p-6 hover:shadow-md transition-shadow duration-200">
       <ErrorToast message={errorMsg} onClose={() => setErrorMsg("")} />
+      {customerError && isStaff && (
+        <ErrorToast message={customerError} onClose={() => {}} />
+      )}
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -32,6 +48,24 @@ export default function BookingCard({ booking }) {
               {booking.status}
             </span>
           </div>
+          {isStaff && !customerLoading && customer && (
+            <div className="mt-2 space-y-1">
+              <p className="text-gray-600 dark:text-gray-300">
+                <span className="font-medium">Customer:</span> {customer.name}
+              </p>
+              {customer.email && (
+                <p className="text-gray-600 dark:text-gray-300">
+                  <span className="font-medium">Email:</span> {customer.email}
+                </p>
+              )}
+              {customer.phoneNumber && (
+                <p className="text-gray-600 dark:text-gray-300">
+                  <span className="font-medium">Phone:</span>{" "}
+                  {customer.phoneNumber}
+                </p>
+              )}
+            </div>
+          )}
           <p className="text-gray-600 dark:text-gray-300">
             <span className="font-medium">Rating:</span>{" "}
             {[...Array(5)].map((_, index) => (
