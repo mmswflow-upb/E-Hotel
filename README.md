@@ -68,7 +68,7 @@ npm install
 npm run dev                           # starts Express server (nodemon)
 ```
 
-API runs at [http://localhost:5000](http://localhost:5000)
+API runs at [http://localhost:5000](http://localhost:8080)
 
 ### 2. Frontend
 
@@ -79,7 +79,7 @@ npm install
 npm run dev                           # starts Vite dev server
 ```
 
-App runs at [http://localhost:3000](http://localhost:3000)
+App runs at [http://localhost:3000](http://localhost:5173)
 
 ## Containerization
 
