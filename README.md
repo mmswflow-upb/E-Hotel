@@ -16,7 +16,7 @@ E-Hotel is a private prototype reservation platform for a fictional hotel chain.
 
 ## Business Analysis & UML Models
 
-All analysis deliverables were created in StarUML and exported as images into the [documentation file](SDM-PROJECT.pdf):
+All analysis deliverables were created in StarUML and exported as images into the [documentation file](SDM-Project.pdf):
 
 * **Use Case Diagrams** & Descriptions
 * **Activity & Sequence Diagrams** for booking, check-in, check-out, cancellation
