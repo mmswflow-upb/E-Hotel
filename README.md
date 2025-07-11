@@ -12,11 +12,11 @@ E-Hotel is a private prototype reservation platform for a fictional hotel chain.
 * **Containerization**: Docker (separate Dockerfiles in `/backend` and `/frontend`)
 * **CI/CD**: GitHub Actions (build, test, and deploy on merge to `main`)
 * **Cloud Infrastructure**: Google Cloud Run, Firestore, Cloud Storage
-* **Modeling & Diagrams**: UML artifacts maintained in StarUML under `/docs`
+* **Documentation File**: Contains all explanations, business logic, diagrams
 
 ## Business Analysis & UML Models
 
-All analysis deliverables were created in StarUML and exported to the `/docs` folder:
+All analysis deliverables were created in StarUML and exported as images into the [documentation file](SDM-PROJECT.pdf):
 
 * **Use Case Diagrams** & Descriptions
 * **Activity & Sequence Diagrams** for booking, check-in, check-out, cancellation
