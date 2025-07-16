@@ -107,6 +107,6 @@ docker run -d -p 3000:4173 e-hotel-frontend
 
 ## UML Diagrams & Documentation
 
-All UML models are in the `/docs` folder, including `.mdj` (StarUML) and exported PNG/SVG formats for easy reference.
+All UML models are in the `SDM-Project.pdf` file, including (StarUML/PlantUML) as exported PNG/SVG formats for easy reference.
 
 ---
