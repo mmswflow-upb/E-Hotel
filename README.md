@@ -6,22 +6,22 @@ E-Hotel is a private prototype reservation platform for a fictional hotel chain.
 
 ## Architecture & Tech Stack
 
-* **Front-End**: ReactJS + Vite, styled with Tailwind CSS
-* **Back-End**: Node.js + ExpressJS REST API
-* **Authentication & Data**: Firebase Authentication & Firestore
-* **Containerization**: Docker (separate Dockerfiles in `/backend` and `/frontend`)
-* **CI/CD**: GitHub Actions (build, test, and deploy on merge to `main`)
-* **Cloud Infrastructure**: Google Cloud Run, Firestore, Cloud Storage
-* **Documentation File**: Contains all explanations, business logic, diagrams
+- **Front-End**: ReactJS + Vite, styled with Tailwind CSS
+- **Back-End**: Node.js + ExpressJS REST API
+- **Authentication & Data**: Firebase Authentication & Firestore
+- **Containerization**: Docker (backend only)
+- **CI/CD**: GitHub Actions (build, test, and deploy on merge to `main`)
+- **Cloud Infrastructure**: Google Cloud Run, Firestore
+- **Documentation File**: Contains all explanations, business logic, diagrams
 
 ## Business Analysis & UML Models
 
 All analysis deliverables were created in StarUML and exported as images into the [documentation file](SDM-Project.pdf):
 
-* **Use Case Diagrams** & Descriptions
-* **Activity & Sequence Diagrams** for booking, check-in, check-out, cancellation
-* **Domain Class Diagram** capturing entities (Room, Booking, PaymentTransaction, Invoice, etc.) and relationships
-* **Business Rules Classes** (PricingRule, CancellationPolicy)
+- **Use Case Diagrams** & Descriptions
+- **Activity & Sequence Diagrams** for booking, check-in, check-out, cancellation
+- **Domain Class Diagram** capturing entities (Room, Booking, PaymentTransaction, Invoice, etc.) and relationships
+- **Business Rules Classes** (PricingRule, CancellationPolicy)
 
 ## Repository Structure
 
@@ -45,65 +45,82 @@ All analysis deliverables were created in StarUML and exported as images into th
 │  ├─ firebase.json
 │  ├─ tailwind.config.js
 │  ├─ vite.config.js
-│  ├─ Dockerfile
 │  └─ package.json
-└─ SDM-Project.docx
+└─ SDM-Project.pdf
 ```
 
 ## Prerequisites
 
-* **Node.js** v16+
-* **Docker** (for container builds)
-* **Firebase CLI** (for auth and Firestore emulation)
-* **Google Cloud SDK** (for deployments)
+- **Node.js** v18.18.0+
+- **Docker** (for backend container builds)
+- **Firebase CLI** (for auth and Firestore emulation)
+- **Google Cloud SDK** (for deployments)
+
+## Environment Configuration
+
+### Backend Environment Variables
+
+Create a `.env` file in the `backend/` directory with the following variables:
+
+```env
+# Firebase Configuration
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-sa.json
+FIRESTORE_DATABASE_ID=e-hotel
+
+# Server Configuration
+PORT=3000
+```
+
+### Frontend Environment Variables
+
+Create a `.env` file in the `frontend/` directory with the following variable:
+
+```env
+# API Configuration
+VITE_API_URL=http://localhost:3000/api
+```
 
 ## Local Development
 
-### 1. Backend
+### 1. Backend Setup
 
 ```bash
 cd backend
-cp credentials/.example.env .env       # populate with your keys
 npm install
-npm run dev                           # starts Express server (nodemon)
+npm start                           # starts Express server
 ```
 
-API runs at [http://localhost:8080](http://localhost:8080)
+API runs at [http://localhost:3000](http://localhost:3000)
 
-### 2. Frontend
+### 2. Frontend Setup
 
 ```bash
 cd frontend
-cp .env.example .env                  # add your Firebase config
 npm install
-npm run dev                           # starts Vite dev server
+npm run dev                         # starts Vite dev server
 ```
 
 App runs at [http://localhost:5173](http://localhost:5173)
 
-## Containerization
+## Containerization (Backend Only)
 
-### Build Images
+### Build Backend Image
 
 ```bash
 docker build -t e-hotel-backend ./backend
-docker build -t e-hotel-frontend ./frontend
 ```
 
-### Run Containers
+### Run Backend Container
 
 ```bash
-docker run -d -p 5000:5000 e-hotel-backend
-docker run -d -p 3000:4173 e-hotel-frontend
+docker run -d -p 3000:3000 e-hotel-backend
 ```
-
-*(Adjust ports as needed)*
 
 ## CI/CD & Deployment
 
-* **GitHub Actions** workflows reside in `.github/workflows/`.
-* On merge to `main`, actions will lint, test, build Docker images, and deploy to Google Cloud Run.
-* **Cloud Run** services auto-scale; images are pushed to Google Container Registry.
+- **GitHub Actions** workflows reside in `.github/workflows/`.
+- On merge to `main`, actions will build Docker images and deploy to Google Cloud Run.
+- **Cloud Run** services auto-scale; images are pushed to Google Container Registry.
 
 ## UML Diagrams & Documentation
 
